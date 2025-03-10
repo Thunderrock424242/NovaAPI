@@ -1,14 +1,13 @@
 package com.thunder.NovaAPI.MainModClass;
 
+import com.thunder.NovaAPI.utils.ThreadMonitor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -64,8 +63,7 @@ public class NovaAPI {
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-        }
+
     }
 
     /**
@@ -101,7 +99,16 @@ public class NovaAPI {
         NovaAPI.shutdown(); // Stop monitoring when server shuts down
 
     }
+
+    public static void initialize() {
+        ThreadMonitor.startMonitoring(); // Start automatic monitoring
+    }
+
+    public static void shutdown() {
+        ThreadMonitor.stopMonitoring(); // Stop monitoring on game exit
+    }
 }
+
 
 
 

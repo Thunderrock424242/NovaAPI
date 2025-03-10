@@ -14,8 +14,8 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = mod_version
-group = mod_group_id
+version = "1.0.0"
+group = "com.thunder.NovaAPI"
 
 repositories {
     mavenLocal()
@@ -30,7 +30,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
     // Specify the version of NeoForge to use.
-    version = project.neo_version
+    version = "21.1.133"
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -113,6 +113,18 @@ configurations {
 }
 
 dependencies {
+
+
+    // Embed Kryo inside your mod while avoiding conflicts
+    jarJar(implementation("com.esotericsoftware:kryo:5.6.2")) {
+        version {
+            prefer '5.6.2'
+        }
+    }
+
+
+
+
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
@@ -140,16 +152,16 @@ dependencies {
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
+            minecraft_version      : "1.21.1",
+            minecraft_version_range: "1.21.1",
+            neo_version            : "21.1.133",
+            neo_version_range      : "21.1.133,",
+            loader_version_range   : "5.0.3",
+            mod_id                 : "novaapi",
+            mod_name               : "NovaAPI",
             mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
+            mod_version            : "1.0.0",
+            mod_authors            : "thunderrock424242",
             mod_description        : mod_description
     ]
     inputs.properties replaceProperties

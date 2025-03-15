@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.SavingSystem;
+package com.thunder.NovaAPI.SavingSystem;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;

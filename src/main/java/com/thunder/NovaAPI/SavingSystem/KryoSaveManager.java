@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.SavingSystem;
+package com.thunder.NovaAPI.SavingSystem;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;

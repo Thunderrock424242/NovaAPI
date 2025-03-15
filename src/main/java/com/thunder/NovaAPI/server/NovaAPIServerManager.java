@@ -1,6 +1,7 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.server;
+package com.thunder.NovaAPI.server;
 
-import com.thunder.wildernessodysseyapi.NovaAPI.config.NovaAPIConfig;
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.config.NovaAPIConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 public class NovaAPIServerManager {

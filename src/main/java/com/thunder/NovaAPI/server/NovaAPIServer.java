@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.server;
+package com.thunder.NovaAPI.server;
 
 import java.io.*;
 import java.net.ServerSocket;

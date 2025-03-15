@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.SavingSystem;
+package com.thunder.NovaAPI.SavingSystem;
 
 import com.thunder.wildernessodysseyapi.ModPackPatches.WorldUpgrader.WorldUpgrade;
 import net.minecraft.server.MinecraftServer;
@@ -19,7 +19,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.LOGGER;
 
 public class AsyncWorldSaver {
     private ScheduledExecutorService saveExecutor;

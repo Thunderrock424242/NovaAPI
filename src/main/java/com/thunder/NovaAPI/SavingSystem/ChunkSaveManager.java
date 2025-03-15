@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.SavingSystem;
+package com.thunder.NovaAPI.SavingSystem;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ChunkMap;
@@ -13,8 +13,7 @@ import net.neoforged.neoforge.event.level.ChunkDataEvent;
 import java.util.Optional;
 import java.util.concurrent.*;
 
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.LOGGER;
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.MOD_ID;
+import static com.thunder.NovaAPI.MainModClass.NovaAPI.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ChunkSaveManager {

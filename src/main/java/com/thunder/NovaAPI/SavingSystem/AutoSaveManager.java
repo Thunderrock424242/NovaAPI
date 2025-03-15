@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.SavingSystem;
+package com.thunder.NovaAPI.SavingSystem;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

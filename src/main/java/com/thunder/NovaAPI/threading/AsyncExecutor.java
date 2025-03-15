@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.threading;
+package com.thunder.NovaAPI.threading;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.ModPackPatches.WorldUpgrader;
+package com.thunder.NovaAPI.WorldUpgrader;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

@@ -9,8 +9,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 import static com.thunder.NovaAPI.MainModClass.NovaAPI.MOD_ID;
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.LOGGER;
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ChunkPreloadHandler {

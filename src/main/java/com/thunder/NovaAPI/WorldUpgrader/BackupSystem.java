@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.ModPackPatches.WorldUpgrader;
+package com.thunder.NovaAPI.WorldUpgrader;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;

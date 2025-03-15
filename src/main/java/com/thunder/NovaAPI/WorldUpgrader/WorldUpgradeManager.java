@@ -1,6 +1,5 @@
-package com.thunder.wildernessodysseyapi.ModPackPatches.WorldUpgrader;
+package com.thunder.NovaAPI.WorldUpgrader;
 
-import com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass;
 import net.minecraft.server.MinecraftServer;
 
 public class WorldUpgradeManager {

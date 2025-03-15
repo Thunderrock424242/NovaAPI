@@ -1,6 +1,7 @@
 package com.thunder.NovaAPI.RenderEngine.texture;
 
 import com.thunder.NovaAPI.RenderEngine.Threading.RenderThreadManager;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TextureStreamingManager {
     private static final Map<ResourceLocation, Integer> loadedTextures = new ConcurrentHashMap<>();
+    private static final TextureManager textureManager = new TextureManager(null); // Use game instance if possible
 
     public static CompletableFuture<Integer> loadTexture(ResourceLocation texturePath) {
         return CompletableFuture.supplyAsync(() -> {
@@ -22,20 +24,19 @@ public class TextureStreamingManager {
     }
 
     private static int loadTextureFromFile(ResourceLocation texturePath) {
-        // TODO: Implement texture loading
+        // TODO: Implement actual texture loading logic
         return 0;
     }
 
     public static void unloadTexture(ResourceLocation texturePath) {
         if (loadedTextures.containsKey(texturePath)) {
-            textureManager.release(texturePath);
+            textureManager.release(texturePath); // Fixed issue: properly defined textureManager
             loadedTextures.remove(texturePath);
         }
     }
 
     private static int loadCompressedTexture(ResourceLocation texturePath) {
-        // TODO: Convert PNG to KTX2 format before loading
-        return TextureLoader.load(texturePath);
+        return loadTextureFromFile(texturePath); // Use existing method instead of undefined TextureLoader
     }
 
     private static int getOptimalTextureResolution(float distance) {
@@ -43,6 +44,4 @@ public class TextureStreamingManager {
         if (distance > 50) return 2;  // Use 1/4 resolution
         return 1;  // Use full resolution
     }
-
-
 }

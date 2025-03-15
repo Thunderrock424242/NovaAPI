@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.chunk;
+package com.thunder.wildernessodysseyapi.NovaAPI.chunk;
 
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
-import static com.thunder.NovaAPI.MainModClass.NovaAPI.MOD_ID;
+import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.LOGGER;
+import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ChunkPreloader {

@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.utils;
+package com.thunder.wildernessodysseyapi.NovaAPI.utils;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;

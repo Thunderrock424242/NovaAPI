@@ -36,6 +36,7 @@ public class TextureStreamingManager {
     }
 
     private static int loadCompressedTexture(ResourceLocation texturePath) {
+        // TODO: Implement PNG to KTX2 texture conversion
         return loadTextureFromFile(texturePath); // Use existing method instead of undefined TextureLoader
     }
 

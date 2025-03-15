@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.RenderEngine.model;
 
-import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading.RenderThreadManager;
+import com.thunder.NovaAPI.RenderEngine.Threading.RenderThreadManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.model.data.ModelData;

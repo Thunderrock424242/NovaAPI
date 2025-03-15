@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.optimizations;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -35,6 +36,6 @@ public class ChunkOptimizer {
     private static void optimizeChunk(LevelChunk chunk) {
         // Example: Optimize chunk updates to reduce lag
         chunk.setUnsaved(false); // Prevent unnecessary disk writes
-        LOGGER.debug("[Nova API] Optimized chunk at " + chunk.getPos().x + ", " + chunk.getPos().z);
+        NovaAPI.LOGGER.debug("[Nova API] Optimized chunk at " + chunk.getPos().x + ", " + chunk.getPos().z);
     }
 }

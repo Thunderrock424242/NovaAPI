@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -45,11 +46,11 @@ public class ChunkPreloader {
                 LevelChunk loadedChunk = chunkCache.getChunk(pos.x, pos.z, true);
 
                 if (loadedChunk != null) {
-                    LOGGER.info("[NovaAPI] Preloaded chunk at: " + pos);
+                    NovaAPI.LOGGER.info("[NovaAPI] Preloaded chunk at: " + pos);
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("[NovaAPI] Error loading chunk at " + pos, e);
+            NovaAPI.LOGGER.error("[NovaAPI] Error loading chunk at " + pos, e);
         }
     }
 

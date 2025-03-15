@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.SavingSystem;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerChunkCache;
@@ -40,7 +41,7 @@ public class ChunkSaveManager {
 
             if (chunk != null) {
                 ChunkSaveManager.queueChunkSave(chunk);
-                LOGGER.info("[NovaAPI] Queued chunk for async saving: " + pos);
+                NovaAPI.LOGGER.info("[NovaAPI] Queued chunk for async saving: " + pos);
             }
         }
     }
@@ -63,12 +64,12 @@ public class ChunkSaveManager {
             // Write the updated chunk data
             chunkMap.write(chunkPos, chunkData);
 
-            LOGGER.info("[NovaAPI] Successfully saved chunk at " + chunkPos);
+            NovaAPI.LOGGER.info("[NovaAPI] Successfully saved chunk at " + chunkPos);
         } catch (ExecutionException | InterruptedException e) {
-            LOGGER.error("[NovaAPI] Error reading chunk data at " + chunk.getPos(), e);
+            NovaAPI.LOGGER.error("[NovaAPI] Error reading chunk data at " + chunk.getPos(), e);
             Thread.currentThread().interrupt(); // Restore interrupt flag
         } catch (Exception e) {
-            LOGGER.error("[NovaAPI] Error saving chunk at " + chunk.getPos(), e);
+            NovaAPI.LOGGER.error("[NovaAPI] Error saving chunk at " + chunk.getPos(), e);
         }
     }
 

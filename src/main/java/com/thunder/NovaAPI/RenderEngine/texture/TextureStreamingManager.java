@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.RenderEngine.texture;
 
-import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading.RenderThreadManager;
+import com.thunder.NovaAPI.RenderEngine.Threading.RenderThreadManager;
 import net.minecraft.resources.ResourceLocation;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;

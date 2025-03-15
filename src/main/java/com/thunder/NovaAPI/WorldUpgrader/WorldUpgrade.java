@@ -1,5 +1,7 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -32,7 +34,7 @@ public class WorldUpgrade {
             buffer.put(data);
         });
 
-        logger.info("Successfully wrote custom data to buffer.");
+        NovaAPI.LOGGER.info("Successfully wrote custom data to buffer.");
     }
 
     /**
@@ -57,14 +59,14 @@ public class WorldUpgrade {
             upgradeData(modDataVersion, CURRENT_VERSION);
         }
 
-        logger.info("Successfully loaded custom data from buffer, data upgraded to version " + CURRENT_VERSION);
+        NovaAPI.LOGGER.info("Successfully loaded custom data from buffer, data upgraded to version " + CURRENT_VERSION);
     }
 
     /**
      * Handles upgrading data from older versions to the current version.
      */
     private static void upgradeData(int oldVersion, int newVersion) {
-        logger.info("Upgrading world data from version " + oldVersion + " to " + newVersion);
+        NovaAPI.LOGGER.info("Upgrading world data from version " + oldVersion + " to " + newVersion);
 
         // Example: Handle different upgrade paths based on version
         if (oldVersion == 1) {
@@ -75,7 +77,7 @@ public class WorldUpgrade {
         // Future-proof: additional migrations
         // if (oldVersion == 2 && newVersion == 3) { ... }
 
-        logger.info("Data upgrade completed successfully.");
+        NovaAPI.LOGGER.info("Data upgrade completed successfully.");
     }
 
     private static void migrateData_v1_to_v2() {
@@ -85,7 +87,7 @@ public class WorldUpgrade {
             // Transform data format here...
             customData.put("newQuestData", oldData);
         }
-        logger.info("Migrated custom quest data from v1 to v2.");
+        NovaAPI.LOGGER.info("Migrated custom quest data from v1 to v2.");
     }
 
     /**

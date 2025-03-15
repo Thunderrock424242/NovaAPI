@@ -29,6 +29,8 @@ public class NovaAPI {
      */
     public static final Logger LOGGER = LogManager.getLogger("novaapi");
 
+    public static final String VERSION = "0.0.3"; // Change this to your mod pack version
+
 
     /**
      * The constant MOD_ID.

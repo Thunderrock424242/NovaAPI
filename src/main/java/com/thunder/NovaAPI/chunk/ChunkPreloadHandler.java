@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
@@ -41,6 +42,6 @@ public class ChunkPreloadHandler {
             }
         }
 
-        LOGGER.info("[NovaAPI] Requested chunk preloading near player at {}", center);
+        NovaAPI.LOGGER.info("[NovaAPI] Requested chunk preloading near player at {}", center);
     }
 }

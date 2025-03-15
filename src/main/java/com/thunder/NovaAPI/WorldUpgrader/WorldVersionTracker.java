@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +29,7 @@ public class WorldVersionTracker {
     public static void saveCurrentVersion(MinecraftServer server) {
         Path path = server.getWorldPath(LevelResource.ROOT).resolve(VERSION_FILE);
         CompoundTag tag = new CompoundTag();
-        tag.putString("ModpackVersion", WildernessOdysseyAPIMainModClass.VERSION);
+        tag.putString("ModpackVersion", NovaAPI.VERSION);
         try {
             NbtIo.writeCompressed(tag, Files.newOutputStream(path));
         } catch (IOException e) {
@@ -37,6 +38,6 @@ public class WorldVersionTracker {
     }
 
     public static boolean needsUpgrade(MinecraftServer server) {
-        return !getStoredVersion(server).equals(WildernessOdysseyAPIMainModClass.VERSION);
+        return !getStoredVersion(server).equals(NovaAPI.VERSION);
     }
 }

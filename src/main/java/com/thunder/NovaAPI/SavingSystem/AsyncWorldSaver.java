@@ -1,6 +1,7 @@
 package com.thunder.NovaAPI.SavingSystem;
 
-import com.thunder.wildernessodysseyapi.ModPackPatches.WorldUpgrader.WorldUpgrade;
+import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.WorldUpgrader.WorldUpgrade;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -41,7 +42,7 @@ public class AsyncWorldSaver {
         int threadPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
         saveExecutor = Executors.newScheduledThreadPool(threadCount(threadOptimal()));
         scheduleNextSave();
-        LOGGER.info("AsyncWorldSaver initialized with adaptive interval: " + adaptiveInterval + "s");
+        NovaAPI.LOGGER.info("AsyncWorldSaver initialized with adaptive interval: " + adaptiveInterval + "s");
     }
 
     private void scheduleNextSave() {
@@ -55,14 +56,14 @@ public class AsyncWorldSaver {
             saveWorldAsync();
             saveCustomDataAsync(); // integration with your mod-specific API
         } catch (Exception e) {
-            LOGGER.error("Error during async save: " + e.getMessage());
+            NovaAPI.LOGGER.error("Error during async save: " + e.getMessage());
         }
 
         // adaptively adjust save interval based on save performance
         long duration = System.currentTimeMillis() - startTime;
         adaptiveInterval = calculateAdaptiveInterval(duration);
 
-        LOGGER.info("Async save completed in " + duration(startTime) + "ms. Next save in " + adaptiveInterval + " seconds.");
+        NovaAPI.LOGGER.info("Async save completed in " + duration(startTime) + "ms. Next save in " + adaptiveInterval + " seconds.");
         scheduleNextSave();
     }
 
@@ -82,7 +83,7 @@ public class AsyncWorldSaver {
             buffer.flip();
             channelWriteFully(channel, buffer);
         } catch (IOException e) {
-            LOGGER.error("Error saving custom world data asynchronously", e);
+            NovaAPI.LOGGER.error("Error saving custom world data asynchronously", e);
         }
     }
 
@@ -99,7 +100,7 @@ public class AsyncWorldSaver {
             buffer.flip();
             channel.write(buffer);
         } catch (IOException e) {
-            LOGGER.error("Failed to save custom data asynchronously: ", e);
+            NovaAPI.LOGGER.error("Failed to save custom data asynchronously: ", e);
         }
     }
 
@@ -117,7 +118,7 @@ public class AsyncWorldSaver {
             WorldUpgrade.writeCustomDataToBuffer(mappedBuffer);
             fc.force(true);
         } catch (IOException ex) {
-            LOGGER.error("Failed to save custom data asynchronously: " + ex.getMessage());
+            NovaAPI.LOGGER.error("Failed to save custom data asynchronously: " + ex.getMessage());
         }
     }
 
@@ -125,11 +126,11 @@ public class AsyncWorldSaver {
         saveExecutor.shutdown();
         try {
             if (!saveExecutor.awaitTermination(15, TimeUnit.SECONDS)) {
-                LOGGER.warn("Async save executor did not terminate in time, forcing shutdown.");
+                NovaAPI.LOGGER.warn("Async save executor did not terminate in time, forcing shutdown.");
                 saveExecutor.shutdownNow();
             }
         } catch (InterruptedException ex) {
-            LOGGER.warn("Interrupted while waiting for save executor shutdown: " + ex.getMessage());
+            NovaAPI.LOGGER.warn("Interrupted while waiting for save executor shutdown: " + ex.getMessage());
         }
     }
 
@@ -142,7 +143,7 @@ public class AsyncWorldSaver {
                 StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             channel.write(buffer);
         } catch (IOException e) {
-            LOGGER.error("Custom data async save failed", e);
+            NovaAPI.LOGGER.error("Custom data async save failed", e);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading;
+package com.thunder.NovaAPI.RenderEngine.Threading;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,7 +11,7 @@ public class RenderThreadManager {
     private static final ExecutorService RENDER_THREAD = Executors.newSingleThreadExecutor();
     private static final Set<String> incompatibleMods = new HashSet<>();
 
-    public static void execute(String modName, Runnable task) {
+    public static void execute(Runnable task) {
         if (incompatibleMods.contains(modName)) {
             // If the mod is marked as incompatible, run it on the main thread immediately
             task.run();

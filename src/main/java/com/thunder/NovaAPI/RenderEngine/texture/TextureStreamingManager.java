@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.texture;
+package com.thunder.NovaAPI.RenderEngine.texture;
 
 import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading.RenderThreadManager;
 import net.minecraft.resources.ResourceLocation;

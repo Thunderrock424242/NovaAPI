@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.instancing;
+package com.thunder.NovaAPI.RenderEngine.instancing;
 
 import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.model.ModelStreamingManager;
 import net.minecraft.client.Camera;

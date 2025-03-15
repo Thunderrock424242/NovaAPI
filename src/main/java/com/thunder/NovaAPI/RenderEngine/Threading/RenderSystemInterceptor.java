@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading;
+package com.thunder.NovaAPI.RenderEngine.Threading;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.concurrent.ConcurrentLinkedQueue;

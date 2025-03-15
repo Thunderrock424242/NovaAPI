@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.optimizations;
+package com.thunder.NovaAPI.optimizations;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -32,6 +32,6 @@ public class PathfindingOptimizer {
         navigator.setCanFloat(false); // Prevent mobs from floating randomly
         navigator.setSpeedModifier(1.2f); // Slightly boost pathfinding efficiency
 
-        NovaAPI.LOGGER.debug("[Nova API] Optimized pathfinding for " + mob.getName().getString());
+        LOGGER.debug("[Nova API] Optimized pathfinding for " + mob.getName().getString());
     }
 }

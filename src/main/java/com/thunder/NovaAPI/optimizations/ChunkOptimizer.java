@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.optimizations;
+package com.thunder.NovaAPI.optimizations;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -10,8 +10,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.LOGGER;
 
 @EventBusSubscriber
 public class ChunkOptimizer {

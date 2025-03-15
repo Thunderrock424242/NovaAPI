@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.config;
+package com.thunder.NovaAPI.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 

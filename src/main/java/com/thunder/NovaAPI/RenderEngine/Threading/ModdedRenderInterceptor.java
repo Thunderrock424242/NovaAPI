@@ -1,6 +1,7 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading;
+package com.thunder.NovaAPI.RenderEngine.Threading;
 
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforgespi.language.IModInfo;
 
 public class ModdedRenderInterceptor {
     public static void executeModRender(Runnable task) {
@@ -10,7 +11,7 @@ public class ModdedRenderInterceptor {
 
     private static String getCurrentModName() {
         return ModList.get().getMods().stream()
-                .filter(mod -> Thread.currentThread().getStackTrace()[2].getClassName().startsWith(mod.getModId()))
-                .map(mod -> mod.getModId()).findFirst().orElse("unknown");
+                .map(IModInfo::getModId)
+                .filter(modId -> Thread.currentThread().getStackTrace()[2].getClassName().startsWith(modId)).findFirst().orElse("unknown");
     }
 }

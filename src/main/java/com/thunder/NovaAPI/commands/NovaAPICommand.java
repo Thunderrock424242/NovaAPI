@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.commands;
+package com.thunder.NovaAPI.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;

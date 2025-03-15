@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.model;
+package com.thunder.NovaAPI.RenderEngine.model;
 
 import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading.RenderThreadManager;
 import net.minecraft.client.Minecraft;

@@ -1,4 +1,4 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine;
+package com.thunder.NovaAPI.RenderEngine;
 
 import java.io.FileWriter;
 import java.io.IOException;

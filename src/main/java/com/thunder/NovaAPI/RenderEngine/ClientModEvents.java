@@ -1,11 +1,11 @@
-package com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine;
+package com.thunder.NovaAPI.RenderEngine;
 
 
-import com.thunder.wildernessodysseyapi.NovaAPI.RenderEngine.Threading.ModdedRenderInterceptor;
+import com.thunder.NovaAPI.RenderEngine.Threading.ModdedRenderInterceptor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-import static com.thunder.wildernessodysseyapi.MainModClass.WildernessOdysseyAPIMainModClass.MOD_ID;
+import static com.thunder.NovaAPI.MainModClass.NovaAPI.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ClientModEvents {

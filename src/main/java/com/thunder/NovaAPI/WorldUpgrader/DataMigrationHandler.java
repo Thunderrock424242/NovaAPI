@@ -1,72 +1,97 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.Optional;
 
 public class DataMigrationHandler {
+    /**
+     * Runs world migration tasks: block replacement, entity fixing, item updates.
+     */
     public static void migrateWorld(MinecraftServer server) {
-        System.out.println("[Wilderness Odyssey] Starting automatic world migration...");
+        System.out.println("[NovaAPI] Starting automatic world migration...");
 
-        RegistryAccess registry = server.registryAccess();
+        handleBlockRemapping(server);
+        handleEntityRemapping(server);
+        handleItemRemapping(server);
 
-        handleAutomaticBlockRemapping(registry, server);
-        handleAutomaticEntityRemapping(server);
-        handleAutomaticItemRemapping(server);
-
-        System.out.println("[Wilderness Odyssey] World migration complete!");
+        System.out.println("[NovaAPI] World migration complete!");
     }
 
-    public static void handleAutomaticBlockRemapping(RegistryAccess registry, MinecraftServer server) {
-        Registry<Block> blockRegistry = registry.registryOrThrow(Registry.BLOCK_REGISTRY);
-
+    /**
+     * 🔄 Automatically detects and replaces missing blocks.
+     */
+    private static void handleBlockRemapping(MinecraftServer server) {
         for (Level level : server.getAllLevels()) {
-            for (LevelChunk chunk : level.getChunkSource().chunkMap.getLoadedChunksIterable()) {
-                for (BlockPos pos : chunk.getPos().getAllPositions()) {
-                    Block block = chunk.getBlockState(pos).getBlock();
-                    ResourceLocation blockID = blockRegistry.getKey(block);
+            for (int x = -30000000; x < 30000000; x += 16) {
+                for (int z = -30000000; z < 30000000; z += 16) {
+                    LevelChunk chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+                    if (chunk != null) {
+                        for (BlockPos pos : BlockPos.betweenClosed(
+                                chunk.getPos().getMinBlockX(), level.getMinBuildHeight(), chunk.getPos().getMinBlockZ(),
+                                chunk.getPos().getMaxBlockX(), level.getMaxBuildHeight(), chunk.getPos().getMaxBlockZ())) {
 
-                    if (blockID == null || block == Blocks.AIR) {
-                        System.out.println("[Wilderness Odyssey] Found missing block at " + pos + ", replacing...");
-                        chunk.setBlockState(pos, Blocks.STONE.defaultBlockState(), false);
-                        chunk.setUnsaved(true);
+                            Block block = chunk.getBlockState(pos).getBlock();
+                            Optional<ResourceLocation> blockID = BuiltInRegistries.BLOCK.getResourceKey(block).map(key -> key.location());
+
+                            if (blockID.isEmpty() || block == Blocks.AIR) {
+                                System.out.println("[NovaAPI] Missing block at " + pos + ", replacing with STONE.");
+                                chunk.setBlockState(pos, Blocks.STONE.defaultBlockState(), false);
+                                chunk.setUnsaved(true);
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    public static void handleAutomaticEntityRemapping(MinecraftServer server) {
-        Registry<?> entityRegistry = server.registryAccess().registryOrThrow(Registry.ENTITY_TYPE_REGISTRY);
-
+    /**
+     * 🔄 Automatically detects and removes invalid entities.
+     */
+    private static void handleEntityRemapping(MinecraftServer server) {
         for (Level level : server.getAllLevels()) {
-            for (Entity entity : level.getEntities().getAll()) {
-                ResourceLocation entityID = entityRegistry.getKey(entity.getType());
+            for (Entity entity : level.getEntitiesOfClass(Entity.class, level.getWorldBorder().getCollisionShape().bounds())) {
+                Holder<EntityType<?>> entityHolder = entity.getType().builtInRegistryHolder();
+                Optional<ResourceLocation> entityID = entityHolder.unwrapKey().map(key -> key.location());
 
-                if (entityID == null) {
-                    System.out.println("[Wilderness Odyssey] Removing missing entity at " + entity.blockPosition());
+                if (entityID.isEmpty() || !BuiltInRegistries.ENTITY_TYPE.containsKey(entityID.get())) {
+                    System.out.println("[NovaAPI] Removing missing entity at " + entity.blockPosition());
                     entity.remove(Entity.RemovalReason.DISCARDED);
                 }
             }
         }
     }
 
-    public static void handleAutomaticItemRemapping(MinecraftServer server) {
+    /**
+     * 🔄 Automatically detects and replaces missing items in player inventories.
+     */
+    private static void handleItemRemapping(MinecraftServer server) {
         server.getPlayerList().getPlayers().forEach(player -> {
-            player.getInventory().items.forEach(stack -> {
-                if (!stack.isEmpty() && stack.getItem() == null) {
-                    System.out.println("[Wilderness Odyssey] Found missing item in " + player.getName().getString() + "'s inventory, replacing...");
-                    stack.set(Item.byBlock(Blocks.STONE));
+            Inventory inventory = player.getInventory();
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
+                ItemStack stack = inventory.getItem(i);
+                if (!stack.isEmpty()) {
+                    Optional<ResourceLocation> itemID = stack.getItem().builtInRegistryHolder().unwrapKey().map(key -> key.location());
+                    if (itemID.isEmpty() || !BuiltInRegistries.ITEM.containsKey(itemID.get())) {
+                        System.out.println("[NovaAPI] Found missing item in " + player.getName().getString() + "'s inventory, replacing...");
+                        inventory.setItem(i, new ItemStack(Items.STONE)); // Replacing with stone item
+                    }
                 }
-            });
+            }
         });
     }
 }

@@ -8,41 +8,35 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 
 public class AsyncWorldSaver {
-    private ScheduledExecutorService saveExecutor;
 
-    private final int saveIntervalMin = 3;  // min interval in minutes
-    private final int coreCount = Runtime.getRuntime().availableProcessors();
+    private final ScheduledExecutorService saveExecutor;
 
-    private ScheduledFuture<?> scheduledSaveTask;
-    private final int maxIntervalSeconds = 600; // max interval
-    private final int minInterval = 120; // minimum 2 mins
-    private volatile int adaptiveInterval = 300; // start at 5 minutes
-
-    private MinecraftServer server;
+    private final MinecraftServer server;
+    private int adaptiveInterval = 300; // Initial interval (5 minutes)
+    private static final int MAX_INTERVAL = 600; // 10 min max
+    private static final int MIN_INTERVAL = 120; // 2 min min
 
     public AsyncWorldSaver(MinecraftServer server) {
         this.server = server;
+        this.saveExecutor = Executors.newScheduledThreadPool(
+                Math.max(2, Runtime.getRuntime().availableProcessors() / 2)
+        );
     }
 
     public void start() {
-        int threadPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
-        saveExecutor = Executors.newScheduledThreadPool(threadCount(threadOptimal()));
         scheduleNextSave();
-        NovaAPI.LOGGER.info("AsyncWorldSaver initialized with adaptive interval: " + adaptiveInterval + "s");
+        NovaAPI.LOGGER.info("AsyncWorldSaver started with interval: " + adaptiveInterval + " seconds.");
     }
 
     private void scheduleNextSave() {
@@ -54,71 +48,50 @@ public class AsyncWorldSaver {
 
         try {
             saveWorldAsync();
-            saveCustomDataAsync(); // integration with your mod-specific API
+            saveCustomDataAsync();
         } catch (Exception e) {
-            NovaAPI.LOGGER.error("Error during async save: " + e.getMessage());
+            NovaAPI.LOGGER.error("Async save error:", e);
         }
 
-        // adaptively adjust save interval based on save performance
         long duration = System.currentTimeMillis() - startTime;
-        adaptiveInterval = calculateAdaptiveInterval(duration);
+        calculateAdaptiveInterval(duration);
+        NovaAPI.LOGGER.info("Async save completed in " + duration + "ms. Next save in " + adaptiveInterval + " seconds.");
 
-        NovaAPI.LOGGER.info("Async save completed in " + duration(startTime) + "ms. Next save in " + adaptiveInterval + " seconds.");
         scheduleNextSave();
     }
 
     private void saveWorldAsync() {
         server.getAllLevels().forEach(level -> {
-            level.getChunkSource().save(false); // saves loaded chunks
+            level.getChunkSource().save(false);
             level.save(null, false, false);
         });
     }
 
     private void saveCustomDataAsync() {
-        // Example of custom integration
-        File customDataFile = server.getWorldPath(LevelResource.ROOT).resolve("custom_data.dat").toFile();
-        try (FileChannel channel = FileChannel.open(customDataPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-            ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024 * 1024); // 4MB buffer example
-            WorldUpgrade.writeCustomDataToBuffer(buffer); // use your Nova API's custom logic
-            buffer.flip();
-            channelWriteFully(channel, buffer);
-        } catch (IOException e) {
-            NovaAPI.LOGGER.error("Error saving custom world data asynchronously", e);
-        }
-    }
+        Path customDataPath = server.getWorldPath(LevelResource.ROOT).resolve("nova_custom_data.dat");
 
-    private Path customDataPath() {
-        return server.getWorldPath(LevelResource.ROOT).resolve("custom_mod_data.dat");
-    }
+        try (FileChannel channel = FileChannel.open(customDataPath,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
 
-    private void saveCustomDataAsync() {
-        try (FileChannel channel = FileChannel.open(customDataPath(),
-                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-
-            ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024 * 1024); // 4MB buffer
+            ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024 * 1024);
             WorldUpgrade.writeCustomDataToBuffer(buffer);
             buffer.flip();
             channel.write(buffer);
+
         } catch (IOException e) {
-            NovaAPI.LOGGER.error("Failed to save custom data asynchronously: ", e);
+            NovaAPI.LOGGER.error("Failed to save custom data asynchronously.", e);
         }
     }
 
-    private int duration(long startTime) {
-        return (int) (System.currentTimeMillis() - startTime);
-    }
+    private void calculateAdaptiveInterval(long duration) {
+        double tickMs = server.getTickCount() > 0 ? (server.getNextTickTime() - System.nanoTime()) / 1_000_000.0 : 50.0;
 
-    private Path customDataPath() {
-        return server.getWorldPath(LevelResource.ROOT).resolve("nova_custom_data.dat");
-    }
-
-    private void saveCustomDataAsync() {
-        try (FileChannel fc = FileChannel.open(customDataPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-            MappedByteBuffer mappedBuf = fc.map(FileChannel.MapMode.READ_WRITE, 0, 4 * 1024 * 1024);
-            WorldUpgrade.writeCustomDataToBuffer(mappedBuffer);
-            fc.force(true);
-        } catch (IOException ex) {
-            NovaAPI.LOGGER.error("Failed to save custom data asynchronously: " + ex.getMessage());
+        if (tickMs > 50.0 || duration > 1000) {
+            adaptiveInterval = Math.min(adaptiveInterval + 30, MAX_INTERVAL);
+        } else {
+            adaptiveInterval = Math.max(adaptiveInterval - 15, MIN_INTERVAL);
         }
     }
 
@@ -126,44 +99,28 @@ public class AsyncWorldSaver {
         saveExecutor.shutdown();
         try {
             if (!saveExecutor.awaitTermination(15, TimeUnit.SECONDS)) {
-                NovaAPI.LOGGER.warn("Async save executor did not terminate in time, forcing shutdown.");
+                NovaAPI.LOGGER.warn("Save executor did not terminate in time; forcing shutdown.");
                 saveExecutor.shutdownNow();
             }
         } catch (InterruptedException ex) {
-            NovaAPI.LOGGER.warn("Interrupted while waiting for save executor shutdown: " + ex.getMessage());
+            NovaAPI.LOGGER.error("Interrupted during save executor shutdown:", ex);
+            saveExecutor.shutdownNow();
         }
     }
 
-    private void saveCustomDataAsync() {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024 * 1024);
-        WorldUpgrade.writeCustomDataToBuffer(buffer);
-        buffer.flip();
+    // NeoForge Event handlers:
+    private static AsyncWorldSaver INSTANCE;
 
-        try (FileChannel channel = FileChannel.open(customDataPath(),
-                StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            channel.write(buffer);
-        } catch (IOException e) {
-            NovaAPI.LOGGER.error("Custom data async save failed", e);
+    @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        INSTANCE = new AsyncWorldSaver(event.getServer());
+        INSTANCE.start();
+    }
+
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        if (INSTANCE != null) {
+            INSTANCE.stop();
         }
-    }
-
-    // Adaptive Interval Logic
-    private int calculateAdaptiveInterval(long duration) {
-        double tickMs = server.getAverageTickTime();
-        if (tickMs > 50) adaptiveInterval = Math.min(adaptiveInterval + 30, maxInterval);
-        else adaptiveInterval = Math.max(adaptiveInterval - 15, minInterval);
-    }
-
-    @SubscribeEvent
-    public static void onServerStart(ServerStartedEvent event) {
-        AsyncWorldSaver saver = new AsyncWorldSaver(event.getServer());
-        saver.start();
-    }
-
-    @SubscribeEvent
-    public static void onServerStop(ServerStoppingEvent event) {
-        // Get instance properly if using global instance management
-        AsyncWorldSaver saver = event.getServer().getAsyncWorldSaver();
-        saver.stop();
     }
 }

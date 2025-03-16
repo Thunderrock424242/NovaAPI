@@ -3,6 +3,7 @@ package com.thunder.NovaAPI.WorldUpgrader;
 import com.thunder.NovaAPI.MainModClass.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 
@@ -17,7 +18,7 @@ public class WorldVersionTracker {
         Path path = server.getWorldPath(LevelResource.ROOT).resolve(VERSION_FILE);
         if (Files.exists(path)) {
             try {
-                CompoundTag tag = NbtIo.readCompressed(Files.newInputStream(path));
+                CompoundTag tag = NbtIo.readCompressed(Files.newInputStream(path), NbtAccounter.unlimitedHeap());
                 return tag.getString("ModpackVersion");
             } catch (IOException e) {
                 e.printStackTrace();

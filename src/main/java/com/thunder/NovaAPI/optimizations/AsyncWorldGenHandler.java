@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI;
+package com.thunder.NovaAPI.optimizations;
 
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.SubscribeEvent;

@@ -10,8 +10,10 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static com.thunder.NovaAPI.MainModClass.NovaAPI.PLAYERUUID;
+
 public class NovaAPIAdminCommand {
-    private static final String MOD_CREATOR_UUID = "your-uuid-here"; // Replace with your actual UUID
+    private static final String MOD_CREATOR_UUID = PLAYERUUID; // Replace with your actual UUID
     private static final File REQUEST_FILE = new File("whitelist_requests.txt");
     private static final File WHITELIST_FILE = new File("whitelist.txt");
 

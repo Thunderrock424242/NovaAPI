@@ -1,14 +1,13 @@
 package com.thunder.NovaAPI.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class NovaAPIAdminCommand {
@@ -32,9 +31,9 @@ public class NovaAPIAdminCommand {
                             return 1;
                         }))
                 .then(Commands.literal("approve")
-                        .then(Commands.argument("id", Commands.string())
+                        .then(Commands.argument("id", StringArgumentType.string()) // 🔹 FIXED
                                 .executes(ctx -> {
-                                    String id = Commands.getString(ctx, "id");
+                                    String id = StringArgumentType.getString(ctx, "id");
                                     boolean success = approveRequest(id);
                                     if (success) {
                                         ctx.getSource().sendSuccess((Supplier<Component>) Component.literal("[Nova API] Approved request ID: " + id), false);
@@ -44,9 +43,9 @@ public class NovaAPIAdminCommand {
                                     return 1;
                                 })))
                 .then(Commands.literal("deny")
-                        .then(Commands.argument("id", Commands.string())
+                        .then(Commands.argument("id", StringArgumentType.string()) // 🔹 FIXED
                                 .executes(ctx -> {
-                                    String id = Commands.getString(ctx, "id");
+                                    String id = StringArgumentType.getString(ctx, "id");
                                     boolean success = denyRequest(id);
                                     if (success) {
                                         ctx.getSource().sendSuccess((Supplier<Component>) Component.literal("[Nova API] Denied request ID: " + id), false);

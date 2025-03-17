@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.RenderEngine.Threading;
 
+import com.mojang.blaze3d.pipeline.RenderCall;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class RenderThreadManager {
      * @param task The OpenGL rendering task.
      */
     public static void executeRenderTask(Runnable task) {
-        RenderSystem.recordRenderCall(task);
+        RenderSystem.recordRenderCall((RenderCall) task);
     }
 
     /**

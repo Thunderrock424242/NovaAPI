@@ -11,6 +11,6 @@ public class RenderThreadAPI {
      * @param renderTask The task that needs to be run on the render thread.
      */
     public static void submitRenderTask(String modName, Runnable renderTask) {
-        RenderThreadManager.execute(modName, renderTask);
+        RenderThreadManager.executeWithSafeGuard(modName, renderTask);
     }
 }

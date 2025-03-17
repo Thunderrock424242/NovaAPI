@@ -21,7 +21,7 @@ public class ModelStreamingManager {
             ModelData model = loadModel(modelPath);
             loadedModels.put(modelPath, model);
             return model;
-        }, RenderThreadManager::execute);
+        }, task -> RenderThreadManager.execute(modName, task));
     }
 
     public static void unloadUnusedModels() {

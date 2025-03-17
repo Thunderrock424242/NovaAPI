@@ -6,7 +6,7 @@ import net.neoforged.neoforgespi.language.IModInfo;
 public class ModdedRenderInterceptor {
     public static void executeModRender(Runnable task) {
         String modName = getCurrentModName();
-        RenderThreadManager.execute(task);
+        RenderThreadManager.execute(modName, task);
     }
 
     private static String getCurrentModName() {

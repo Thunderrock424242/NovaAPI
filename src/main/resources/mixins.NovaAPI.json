@@ -4,8 +4,11 @@
   "package": "com.thunder.NovaAPI.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "CapabilityProviderMixin",
     "CrashReportMixin",
-    "ModelDataMixin"
+    "EntityMixin",
+    "ModelDataMixin",
+    "NbtIoMixin"
   ],
   "injectors": {
     "defaultRequire": 1

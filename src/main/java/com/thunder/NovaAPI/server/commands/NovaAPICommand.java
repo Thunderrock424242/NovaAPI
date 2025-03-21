@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.commands;
+package com.thunder.NovaAPI.server.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;

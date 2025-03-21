@@ -4,9 +4,13 @@
   "package": "com.thunder.NovaAPI.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "CrashReportMixin",
     "ModelDataMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "MinecraftMixin"
+  ]
 }

@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.network;
+package com.thunder.NovaAPI.server.network;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;

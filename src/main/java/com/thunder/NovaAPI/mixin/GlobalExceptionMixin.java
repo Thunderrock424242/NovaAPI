@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.mixin;
 
+import com.thunder.NovaAPI.debug.CrashHelper.LiveLogMonitor;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

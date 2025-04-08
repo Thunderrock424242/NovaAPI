@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.MainModClass;
+package com.thunder.NovaAPI;
 
 import com.thunder.NovaAPI.debug.CrashHelper.CrashHandler;
 import com.thunder.NovaAPI.utils.ThreadMonitor;

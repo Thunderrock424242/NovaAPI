@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
@@ -9,7 +9,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
-import static com.thunder.NovaAPI.MainModClass.NovaAPI.MOD_ID;
+import static com.thunder.NovaAPI.NovaAPI.MOD_ID;
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ChunkPreloadHandler {

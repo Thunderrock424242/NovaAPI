@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 import net.minecraft.server.MinecraftServer;
 
 public class WorldUpgradeManager {

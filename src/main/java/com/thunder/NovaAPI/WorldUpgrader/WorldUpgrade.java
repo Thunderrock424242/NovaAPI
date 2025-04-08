@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

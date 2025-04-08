@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.WorldUpgrader;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtAccounter;

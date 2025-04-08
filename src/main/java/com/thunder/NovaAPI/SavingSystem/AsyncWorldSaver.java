@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.SavingSystem;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.WorldUpgrader.WorldUpgrade;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;

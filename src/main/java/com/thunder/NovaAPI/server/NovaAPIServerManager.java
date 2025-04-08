@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.server;
 
-import com.thunder.NovaAPI.MainModClass.NovaAPI;
+import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 

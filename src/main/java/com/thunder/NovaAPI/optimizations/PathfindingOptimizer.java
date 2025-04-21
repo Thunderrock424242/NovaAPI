@@ -7,7 +7,7 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,8 +17,8 @@ public class PathfindingOptimizer {
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(4); // Background thread pool
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public static void onLivingUpdate(LivingEvent event) {
-        LivingEntity entity = event.getEntity();
+    public static void onLivingUpdate(EntityTickEvent.Pre event) {
+        LivingEntity entity = event.getEntity().getControllingPassenger();
         if (!(entity instanceof Mob mob)) return; // Only optimize AI for mobs
 
         // Process AI pathfinding optimizations asynchronously

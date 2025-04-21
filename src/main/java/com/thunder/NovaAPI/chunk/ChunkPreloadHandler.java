@@ -25,7 +25,7 @@ public class ChunkPreloadHandler {
     }
 
     @SubscribeEvent
-    public static void onWorldTick(LevelTickEvent event) {
+    public static void onWorldTick(LevelTickEvent.Pre event) {
         if (event.getLevel() instanceof ServerLevel serverWorld) {
             ChunkPreloader.processChunkQueue();
         }

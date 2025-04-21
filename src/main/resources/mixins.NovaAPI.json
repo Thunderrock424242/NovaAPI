@@ -4,18 +4,11 @@
   "package": "com.thunder.NovaAPI.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "CapabilityProviderMixin",
-    "CrashReportMixin",
-    "EntityMixin",
-    "MixinProcessorMixin",
-    "ModelDataMixin",
-    "NbtIoMixin"
+    "ModelDataMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
-    "GlobalExceptionMixin",
-    "MinecraftMixin"
   ]
 }

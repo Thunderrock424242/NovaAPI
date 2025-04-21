@@ -29,8 +29,6 @@ public class NovaAPI {
      */
     public static final Logger LOGGER = LogManager.getLogger("novaapi");
 
-    public static final String VERSION = "0.0.3"; // Change this to your mod pack version
-
     public static final String PLAYERUUID = "380df991-f603-344c-a090-369bad2a924a";
 
 

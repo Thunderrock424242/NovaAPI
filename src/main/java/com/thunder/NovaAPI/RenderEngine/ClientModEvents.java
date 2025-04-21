@@ -1,7 +1,9 @@
 package com.thunder.NovaAPI.RenderEngine;
 
 
+import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.RenderEngine.Threading.ModdedRenderInterceptor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
@@ -21,10 +23,16 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiLayerEvent.Pre event) {
-        ModdedRenderInterceptor.executeModRender(() -> {
-            event.getGuiGraphics().pose().pushPose();
-            // TODO: Run modded UI rendering logic
-            event.getGuiGraphics().pose().popPose();
-        });
+        GuiGraphics graphics = event.getGuiGraphics();
+        graphics.pose().pushPose();
+        try {
+            ModdedRenderInterceptor.executeModRender(() -> {
+                // Run actual GUI drawing here using graphics
+            });
+        } catch (Exception e) {
+            NovaAPI.LOGGER.error("RenderInterceptor threw during overlay rendering", e);
+        } finally {
+            graphics.pose().popPose();
+        }
     }
 }

@@ -11,8 +11,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkDataEvent;
 
-import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.thunder.NovaAPI.NovaAPI.MOD_ID;
 
@@ -20,30 +23,36 @@ import static com.thunder.NovaAPI.NovaAPI.MOD_ID;
 public class ChunkSaveManager {
     private static final ExecutorService CHUNK_SAVE_THREAD = Executors.newSingleThreadExecutor();
     private static final ConcurrentLinkedQueue<LevelChunk> chunkSaveQueue = new ConcurrentLinkedQueue<>();
+    private static final Set<ChunkPos> queuedChunks = ConcurrentHashMap.newKeySet();
 
     public static void queueChunkSave(LevelChunk chunk) {
-        chunkSaveQueue.add(chunk);
-    }
-
-    public static void processChunkSaves() {
-        while (!chunkSaveQueue.isEmpty()) {
-            LevelChunk chunk = chunkSaveQueue.poll();
-            if (chunk != null) {
-                saveChunk(chunk);
-            }
+        ChunkPos pos = chunk.getPos();
+        if (queuedChunks.add(pos)) {
+            chunkSaveQueue.add(chunk);
         }
     }
+
     @SubscribeEvent
     public static void onChunkSave(ChunkDataEvent.Save event) {
         if (event.getLevel() instanceof ServerLevel serverWorld) {
             ChunkPos pos = event.getChunk().getPos();
-            LevelChunk chunk = serverWorld.getChunk(pos.x, pos.z);
-
+            LevelChunk chunk = serverWorld.getChunkSource().getChunkNow(pos.x, pos.z);
             if (chunk != null) {
-                ChunkSaveManager.queueChunkSave(chunk);
-                NovaAPI.LOGGER.info("[NovaAPI] Queued chunk for async saving: " + pos);
+                queueChunkSave(chunk);
             }
         }
+    }
+
+    public static void startProcessing() {
+        CHUNK_SAVE_THREAD.execute(() -> {
+            while (!chunkSaveQueue.isEmpty()) {
+                LevelChunk chunk = chunkSaveQueue.poll();
+                if (chunk != null) {
+                    queuedChunks.remove(chunk.getPos());
+                    saveChunk(chunk);
+                }
+            }
+        });
     }
 
     private static void saveChunk(LevelChunk chunk) {
@@ -51,23 +60,13 @@ public class ChunkSaveManager {
             ServerLevel world = (ServerLevel) chunk.getLevel();
             ServerChunkCache chunkCache = world.getChunkSource();
             ChunkMap chunkMap = chunkCache.chunkMap;
-
             ChunkPos chunkPos = chunk.getPos();
 
-            // Asynchronously read the chunk data
-            CompletableFuture<Optional<CompoundTag>> futureChunkData = chunkMap.read(chunkPos);
+            chunkMap.write(chunkPos, chunkMap.read(chunkPos).get().orElseGet(() -> new CompoundTag()));
+            // You can modify the data here if needed before writing
 
-            // Wait for the read operation to complete and get the data
-            Optional<CompoundTag> optionalTag = futureChunkData.get();
-            CompoundTag chunkData = optionalTag.orElse(new CompoundTag()); // If no data, create new
-
-            // Write the updated chunk data
-            chunkMap.write(chunkPos, chunkData);
-
-            NovaAPI.LOGGER.info("[NovaAPI] Successfully saved chunk at " + chunkPos);
-        } catch (ExecutionException | InterruptedException e) {
-            NovaAPI.LOGGER.error("[NovaAPI] Error reading chunk data at " + chunk.getPos(), e);
-            Thread.currentThread().interrupt(); // Restore interrupt flag
+            // Reduce to debug or trace logging
+            NovaAPI.LOGGER.debug("[NovaAPI] Async saved chunk at " + chunkPos);
         } catch (Exception e) {
             NovaAPI.LOGGER.error("[NovaAPI] Error saving chunk at " + chunk.getPos(), e);
         }

@@ -53,7 +53,6 @@ public class NovaAPI {
         // Register mod setup and creative tabs
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
-        modEventBus.addListener(this::onServerStopping);
 
         // Register global events
         NeoForge.EVENT_BUS.register(this);

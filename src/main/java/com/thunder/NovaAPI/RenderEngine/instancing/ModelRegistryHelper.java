@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.RenderEngine.instancing;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 
@@ -19,20 +20,19 @@ public class ModelRegistryHelper {
      * for use with instanced rendering.
      */
     public static void initialize() {
-        for (EntityType<?> entityType : EntityType.values()) {
-            if (EntityRenderers.getRenderer(entityType) != null) {
-                ResourceLocation modelPath = resolveModelPath(entityType);
-                entityModelMap.put(entityType, modelPath);
-            }
+        for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
+            ResourceLocation modelPath = resolveModelPath(entityType);
+            entityModelMap.put(entityType, modelPath);
         }
     }
+
 
     /**
      * Returns a model path like "modid:models/entity/zombie.json"
      */
     private static ResourceLocation resolveModelPath(EntityType<?> entityType) {
-        ResourceLocation id = EntityType.getKey(entityType); // More stable than getRegistryName()
-        return new ResourceLocation(id.getNamespace(), "models/entity/" + id.getPath() + ".json");
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+        return ResourceLocation.tryParse(id.getNamespace() + ":models/entity/" + id.getPath() + ".json");
     }
 
     /**
@@ -41,6 +41,6 @@ public class ModelRegistryHelper {
      */
     public static ResourceLocation getModelPath(EntityType<?> type) {
         return entityModelMap.getOrDefault(type,
-                new ResourceLocation("minecraft", "models/entity/default.json"));
+                ResourceLocation.tryParse("minecraft:models/entity/default.json"));
     }
 }

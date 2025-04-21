@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
 
 public class InstancedRenderer {
 
@@ -49,6 +50,6 @@ public class InstancedRenderer {
         if (vao <= 0) return; // Skip rendering if VAO is invalid
 
         GL30.glBindVertexArray(vao);
-        GL30.glDrawElementsInstanced(GL30.GL_TRIANGLES, /*indexCount=*/36, GL30.GL_UNSIGNED_INT, 0, 1);
+        GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, 1);
     }
 }

@@ -22,9 +22,9 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiLayerEvent.Pre event) {
         ModdedRenderInterceptor.executeModRender(() -> {
-            event.getMatrixStack().pushPose();
+            event.getGuiGraphics().pose().pushPose();
             // TODO: Run modded UI rendering logic
-            event.getMatrixStack().popPose();
+            event.getGuiGraphics().pose().popPose();
         });
     }
 }

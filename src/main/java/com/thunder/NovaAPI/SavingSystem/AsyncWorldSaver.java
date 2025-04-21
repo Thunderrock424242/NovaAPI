@@ -1,7 +1,6 @@
 package com.thunder.NovaAPI.SavingSystem;
 
 import com.thunder.NovaAPI.NovaAPI;
-import com.thunder.NovaAPI.WorldUpgrader.WorldUpgrade;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -76,7 +75,6 @@ public class AsyncWorldSaver {
                 StandardOpenOption.TRUNCATE_EXISTING)) {
 
             ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024 * 1024);
-            WorldUpgrade.writeCustomDataToBuffer(buffer);
             buffer.flip();
             channel.write(buffer);
 

@@ -6,15 +6,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.model.data.ModelData;
-import org.lwjgl.opengl.GL45;
+import org.lwjgl.opengl.GL30;
 
 public class InstancedRenderer {
-    private final ResourceLocation modelPath;
-    private ModelData model;
 
     public InstancedRenderer(ResourceLocation modelPath, ResourceLocation modelPath1) {
-        this.modelPath = modelPath1;
-        this.model = ModelData.builder().build(); // NeoForge ModelData
+        ModelData model = ModelData.builder().build(); // NeoForge ModelData
 
         // Correct way to access Mixin-injected methods
         IModeledDataExtensions extensions = (IModeledDataExtensions) (Object) model;
@@ -43,21 +40,15 @@ public class InstancedRenderer {
     }
 
     public void render(Entity entity) {
-        if (!isInFrustum(entity)) return; // Skip rendering if off-screen
-        if (model == null) return; // Ensure model is loaded
+        if (!isInFrustum(entity)) return;
 
-        renderModel(model);
+        ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
+        if (!VAOManager.isModelEnabled(modelPath)) return; // Let vanilla handle it if failed
+
+        int vao = VAOManager.getOrLoadVAO(modelPath);
+        if (vao <= 0) return; // Skip rendering if VAO is invalid
+
+        GL30.glBindVertexArray(vao);
+        GL30.glDrawElementsInstanced(GL30.GL_TRIANGLES, /*indexCount=*/36, GL30.GL_UNSIGNED_INT, 0, 1);
     }
-
-    private void renderModel(ModelData model) {
-        try {
-            IModeledDataExtensions extensions = (IModeledDataExtensions) (Object) model;
-
-            GL45.glBindVertexArray(extensions.getVAO());
-            GL45.glDrawElementsInstanced(GL45.GL_TRIANGLES, extensions.getIndexCount(), GL45.GL_UNSIGNED_INT, 0, 1);
-        } catch (ClassCastException e) {
-            System.err.println("[InstancedRenderer] Failed to cast ModelData for instanced rendering!");
-        }
-    }
-    // TODO: Implement instanced rendering for the 3D model
 }

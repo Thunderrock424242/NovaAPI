@@ -1,7 +1,5 @@
 package com.thunder.NovaAPI;
 
-import com.thunder.NovaAPI.debug.CrashHelper.CrashHandler;
-import com.thunder.NovaAPI.debug.CrashHelper.LiveLogMonitor;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -61,9 +59,6 @@ public class NovaAPI {
 
         // Register global events
         NeoForge.EVENT_BUS.register(this);
-
-        CrashHandler.register();
-        LiveLogMonitor.start();
 
 
     }

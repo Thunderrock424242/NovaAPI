@@ -99,7 +99,6 @@ public class NovaAPI {
     public void onServerStopping(ServerStoppingEvent event) {
         com.thunder.NovaAPI.chunk.ChunkPreloader.shutdown();
         NovaAPI.shutdown(); // Stop monitoring when server shuts down
-
     }
 
     public static void initialize() {

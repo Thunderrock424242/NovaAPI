@@ -14,7 +14,7 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = "1.0.0"
+version = "0.5.0"
 group = "com.thunder.NovaAPI"
 
 repositories {
@@ -30,7 +30,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
     // Specify the version of NeoForge to use.
-    version = "21.1.133"
+    version = "21.1.160"
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -159,7 +159,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_id                 : "novaapi",
             mod_name               : "Nova API",
             mod_license            : mod_license,
-            mod_version            : "1.0.0",
+            mod_version            : "0.5.0",
             mod_authors            : "thunderrock424242",
             mod_description        : mod_description
     ]

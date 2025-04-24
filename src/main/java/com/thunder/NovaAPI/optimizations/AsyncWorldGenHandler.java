@@ -68,4 +68,8 @@ public class AsyncWorldGenHandler {
     public static void shutdownExecutor() {
         worldGenExecutor.shutdownNow();
     }
+
+    public static void enable() {
+
+    }
 }

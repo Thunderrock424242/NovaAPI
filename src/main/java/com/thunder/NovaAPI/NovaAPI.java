@@ -1,9 +1,12 @@
 package com.thunder.NovaAPI;
 
+import com.thunder.NovaAPI.config.NovaAPIConfig;
+import com.thunder.NovaAPI.server.NovaAPIServerManager;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -75,7 +78,11 @@ public class NovaAPI {
      */
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-
+        MinecraftServer server = event.getServer();
+        NovaAPIServerManager.connectToDedicatedServer("127.0.0.1", server);
+        if (!NovaAPIConfig.ENABLE_DEDICATED_SERVER.get()) {
+            NovaAPIServerManager.startLocalServer();
+        }
 
     }
 

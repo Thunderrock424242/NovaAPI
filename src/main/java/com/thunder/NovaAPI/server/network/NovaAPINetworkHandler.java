@@ -7,7 +7,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 import static com.mojang.text2speech.Narrator.LOGGER;
 
-public class NovaAPINetworkHandler {
+public class NovaAPINetworkHandler implements NovaAPINetworkHandlerr {
     private static final String SERVER_IP = "127.0.0.1";
     private static final int SERVER_PORT = 25565;
 
@@ -42,4 +42,16 @@ public class NovaAPINetworkHandler {
             workerGroup.shutdownGracefully();
         }
     }
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx, String msg) {
+        if (msg.equals("AUTH_SUCCESS")) {
+            LOGGER.info("[Nova API] Successfully connected to dedicated server.");
+            NovaAPIServerConnection.setConnected(true);
+            NovaAPIServerConnection.setLastPing(System.currentTimeMillis()); // Mock ping for now
+        } else {
+            LOGGER.warn("[Nova API] Server denied access: " + msg);
+            NovaAPIServerConnection.setConnected(false);
+        }
+    }
+
 }

@@ -2,6 +2,8 @@ package com.thunder.NovaAPI.server.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.thunder.NovaAPI.config.NovaAPIConfig;
+import com.thunder.NovaAPI.server.network.NovaAPIServerConnection;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -13,7 +15,7 @@ import java.util.function.Supplier;
 import static com.thunder.NovaAPI.NovaAPI.PLAYERUUID;
 
 public class NovaAPIAdminCommand {
-    private static final String MOD_CREATOR_UUID = PLAYERUUID; // Replace with your actual UUID
+    private static final String MOD_CREATOR_UUID = PLAYERUUID;
     private static final File REQUEST_FILE = new File("whitelist_requests.txt");
     private static final File WHITELIST_FILE = new File("whitelist.txt");
 
@@ -33,7 +35,7 @@ public class NovaAPIAdminCommand {
                             return 1;
                         }))
                 .then(Commands.literal("approve")
-                        .then(Commands.argument("id", StringArgumentType.string()) // 🔹 FIXED
+                        .then(Commands.argument("id", StringArgumentType.string())
                                 .executes(ctx -> {
                                     String id = StringArgumentType.getString(ctx, "id");
                                     boolean success = approveRequest(id);
@@ -45,7 +47,7 @@ public class NovaAPIAdminCommand {
                                     return 1;
                                 })))
                 .then(Commands.literal("deny")
-                        .then(Commands.argument("id", StringArgumentType.string()) // 🔹 FIXED
+                        .then(Commands.argument("id", StringArgumentType.string())
                                 .executes(ctx -> {
                                     String id = StringArgumentType.getString(ctx, "id");
                                     boolean success = denyRequest(id);
@@ -55,7 +57,35 @@ public class NovaAPIAdminCommand {
                                         ctx.getSource().sendFailure(Component.literal("[Nova API] Invalid request ID."));
                                     }
                                     return 1;
-                                }))));
+                                })))
+                .then(Commands.literal("status")
+                        .executes(ctx -> showStatus(ctx.getSource())))
+        );
+    }
+
+    private static int showStatus(CommandSourceStack source) {
+        source.sendSuccess((Supplier<Component>) Component.literal("§6[Nova API Status]"), false);
+
+        boolean isDedicated = NovaAPIConfig.ENABLE_DEDICATED_SERVER.get();
+        source.sendSuccess((Supplier<Component>) Component.literal("§eMode: §f" + (isDedicated ? "Dedicated" : "Local")), false);
+
+        boolean connected = isDedicated && NovaAPIServerConnection.isConnected();
+        source.sendSuccess((Supplier<Component>) Component.literal("§eConnection: §f" + (connected ? "Connected ✅" : "Disconnected ❌")), false);
+
+        boolean chunkOpt = NovaAPIConfig.ENABLE_CHUNK_OPTIMIZATIONS.get();
+        source.sendSuccess((Supplier<Component>) Component.literal("§eChunk Optimization: §f" + (chunkOpt ? "Enabled" : "Disabled")), false);
+
+        boolean aiEnabled = NovaAPIConfig.ENABLE_AI_OPTIMIZATIONS.get();
+        int aiThreads = NovaAPIConfig.PATHFINDING_THREAD_COUNT.get();
+        source.sendSuccess((Supplier<Component>) Component.literal("§eAI Optimization: §f" + (aiEnabled ? aiThreads + " thread(s)" : "Disabled")), false);
+
+        boolean async = NovaAPIConfig.ASYNC_CHUNK_LOADING.get();
+        source.sendSuccess((Supplier<Component>) Component.literal("§eAsync Chunk Loading: §f" + (async ? "Enabled" : "Disabled")), false);
+
+        long ping = NovaAPIServerConnection.getLastPing();
+        source.sendSuccess((Supplier<Component>) Component.literal("§ePing: §f" + (connected ? ping + "ms" : "-")), false);
+
+        return 1;
     }
 
     private static List<String> readRequests() {
@@ -78,7 +108,7 @@ public class NovaAPIAdminCommand {
 
         for (String request : requests) {
             if (request.startsWith(id + ":")) {
-                approvedIP = request.split(":")[1]; // Extract IP
+                approvedIP = request.split(":")[1];
             } else {
                 updatedRequests.add(request);
             }

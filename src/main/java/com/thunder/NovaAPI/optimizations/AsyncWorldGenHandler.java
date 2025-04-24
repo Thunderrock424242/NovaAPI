@@ -2,6 +2,7 @@ package com.thunder.NovaAPI.optimizations;
 
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
 import java.util.concurrent.CompletableFuture;
@@ -70,6 +71,15 @@ public class AsyncWorldGenHandler {
     }
 
     public static void enable() {
+        // Register this class to listen for events (e.g., LevelEvent.Load)
+        NeoForge.EVENT_BUS.register(AsyncWorldGenHandler.class);
 
+        // Optionally, run main thread tasks every tick
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) -> {
+            executeMainThreadTasks();
+        });
+
+        System.out.println("[Nova API] AsyncWorldGenHandler enabled and listening for world events.");
     }
+
 }

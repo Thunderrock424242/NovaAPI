@@ -1,55 +1,63 @@
 package com.thunder.NovaAPI.RenderEngine.instancing;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Camera;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.minecraft.world.entity.Entity;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 
+import java.util.*;
+
 public class InstancedRenderer {
 
-    public InstancedRenderer(ResourceLocation modelPath, ResourceLocation modelPath1) {
-        ModelData model = ModelData.builder().build(); // NeoForge ModelData
+    /**
+     * Renders all visible entities using instanced rendering, grouped by model.
+     */
+    public static void renderAll(Iterable<Entity> entities, Frustum frustum) {
+        Map<ResourceLocation, List<Entity>> batched = new HashMap<>();
 
-        // Correct way to access Mixin-injected methods
-        IModeledDataExtensions extensions = (IModeledDataExtensions) (Object) model;
-        extensions.setVAO(loadVAO(modelPath));
-        extensions.setIndexCount(loadIndexCount(modelPath));
-    }
+        for (Entity entity : entities) {
+            if (!frustum.isVisible(entity.getBoundingBox())) continue;
 
-    private int loadVAO(ResourceLocation modelPath) {
-        // TODO: Implement actual VAO loading
-        return 0; // Placeholder
-    }
+            ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
+            batched.computeIfAbsent(modelPath, k -> new ArrayList<>()).add(entity);
+        }
 
-    private int loadIndexCount(ResourceLocation modelPath) {
-        // TODO: Implement actual index count loading
-        return 0; // Placeholder
-    }
+        for (Map.Entry<ResourceLocation, List<Entity>> entry : batched.entrySet()) {
+            ResourceLocation modelPath = entry.getKey();
+            List<Entity> entityList = entry.getValue();
 
-    private boolean isInFrustum(Entity entity) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 cameraPos = camera.getPosition();
+            int vao = VAOManager.getOrLoadVAO(modelPath);
+            if (!VAOManager.isModelEnabled(modelPath) || vao <= 0) continue;
 
-        return entity.getBoundingBox().intersects(
-                cameraPos.x - 50, cameraPos.y - 50, cameraPos.z - 50,
-                cameraPos.x + 50, cameraPos.y + 50, cameraPos.z + 50
-        );
-    }
+            GL30.glBindVertexArray(vao);
+            GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, entityList.size());
+        }
 
-    public void render(Entity entity) {
-        if (!isInFrustum(entity)) return;
+        GL30.glBindVertexArray(0);
 
-        ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
-        if (!VAOManager.isModelEnabled(modelPath)) return; // Let vanilla handle it if failed
 
-        int vao = VAOManager.getOrLoadVAO(modelPath);
-        if (vao <= 0) return; // Skip rendering if VAO is invalid
 
-        GL30.glBindVertexArray(vao);
-        GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, 1);
+
+
+        for (Entity entity : entities) {
+            if (!frustum.isVisible(entity.getBoundingBox())) continue;
+
+            ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
+            batched.computeIfAbsent(modelPath, k -> new ArrayList<>()).add(entity);
+        }
+
+        for (Map.Entry<ResourceLocation, List<Entity>> entry : batched.entrySet()) {
+            ResourceLocation modelPath = entry.getKey();
+            List<Entity> entityList = entry.getValue();
+
+            int vao = VAOManager.getOrLoadVAO(modelPath);
+            if (!VAOManager.isModelEnabled(modelPath) || vao <= 0) continue;
+
+            GL30.glBindVertexArray(vao);
+            GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, entityList.size());
+        }
+
+        GL30.glBindVertexArray(0); // clean unbind
     }
 }

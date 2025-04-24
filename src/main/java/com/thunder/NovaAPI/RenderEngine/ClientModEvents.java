@@ -3,6 +3,8 @@ package com.thunder.NovaAPI.RenderEngine;
 
 import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.RenderEngine.Threading.ModdedRenderInterceptor;
+import com.thunder.NovaAPI.RenderEngine.instancing.InstancedRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -16,9 +18,12 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
-        ModdedRenderInterceptor.executeModRender(() -> {
-            // TODO: Run modded world rendering logic
-        });
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+
+        InstancedRenderer.renderAll(
+                Minecraft.getInstance().level.entitiesForRendering(),
+                event.getFrustum()
+        );
     }
 
     @SubscribeEvent

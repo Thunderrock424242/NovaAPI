@@ -3,6 +3,7 @@ package com.thunder.NovaAPI.server;
 import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import com.thunder.NovaAPI.optimizations.AsyncWorldGenHandler;
+import com.thunder.NovaAPI.optimizations.PathfindingOptimizer;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
@@ -38,17 +39,11 @@ public class NovaAPIServerManager {
     public static void startLocalServer() {
         NovaAPI.LOGGER.info("[Nova API] Starting in Local Mode...");
 
-        // Chunk Optimization
-        if (NovaAPIConfig.ENABLE_CHUNK_OPTIMIZATIONS.get()) {
-            ChunkOptimizer.initialize(); // Make sure this is your static init method
-            NovaAPI.LOGGER.info("[Nova API] Chunk Optimization initialized.");
-        }
-
         // AI Pathfinding Optimization
         if (NovaAPIConfig.ENABLE_AI_OPTIMIZATIONS.get()) {
             int threadCount = NovaAPIConfig.PATHFINDING_THREAD_COUNT.get();
             PathfindingOptimizer.initialize(threadCount); // Ensure you have this method
-            NovaAPI.LOGGER.info("[Nova API] AI Pathfinding initialized with " + threadCount + " thread(s).");
+            NovaAPI.LOGGER.info("[Nova API] AI Pathfinding initialized with {} thread(s).", threadCount);
         }
 
         // Async Chunk Loading
@@ -62,7 +57,7 @@ public class NovaAPIServerManager {
 
 
     public static void connectToDedicatedServer(String serverIP, MinecraftServer server) {
-        NovaAPI.LOGGER.info("[Nova API] Connecting to Dedicated Nova API Server at " + serverIP + "...");
+        NovaAPI.LOGGER.info("[Nova API] Connecting to Dedicated Nova API Server at {}...", serverIP);
 
         try {
             SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -83,7 +78,7 @@ public class NovaAPIServerManager {
                 if ("OK".equalsIgnoreCase(response)) {
                     NovaAPI.LOGGER.info("[Nova API] Successfully authenticated with Nova API Server.");
                 } else {
-                    NovaAPI.LOGGER.warn("[Nova API] Authentication failed: " + response);
+                    NovaAPI.LOGGER.warn("[Nova API] Authentication failed: {}", response);
                 }
 
             } catch (Exception e) {

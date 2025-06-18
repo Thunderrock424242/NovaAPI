@@ -56,37 +56,37 @@ public class NovaAPIServerManager {
     }
 
 
-    public static void connectToDedicatedServer(String serverIP, MinecraftServer server) {
-        NovaAPI.LOGGER.info("[Nova API] Connecting to Dedicated Nova API Server at {}...", serverIP);
-
+    /**
+     * Attempts to connect & authenticate to the dedicated Nova API server.
+     * @return true if handshake succeeded, false otherwise.
+     */
+    public static boolean connectToDedicatedServer(String serverIP, MinecraftServer server) {
+        NovaAPI.LOGGER.info("[Nova API] Connecting to Dedicated Server at " + serverIP + "...");
         try {
-            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            try (SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(serverIP, 8443)) {
+            SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            try (SSLSocket socket = (SSLSocket) factory.createSocket(serverIP, 8443)) {
                 socket.startHandshake();
-
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                // Use IP address as base for a consistent UUID
-                String identity = server.getLocalIp(); // You could use server.getServerModName() or something else unique
-                UUID serverUUID = UUID.nameUUIDFromBytes(identity.getBytes(StandardCharsets.UTF_8));
-                String authToken = generateAuthToken(serverUUID);
+                // generate and send auth
+                String idSeed = server.getLocalIp();
+                UUID uuid = UUID.nameUUIDFromBytes(idSeed.getBytes(StandardCharsets.UTF_8));
+                String token = generateAuthToken(uuid);
+                out.println("AUTH " + uuid + " " + token);
 
-                out.println("AUTH " + serverUUID + " " + authToken);
-                String response = in.readLine();
-
-                if ("OK".equalsIgnoreCase(response)) {
-                    NovaAPI.LOGGER.info("[Nova API] Successfully authenticated with Nova API Server.");
+                String resp = in.readLine();
+                if ("OK".equalsIgnoreCase(resp)) {
+                    NovaAPI.LOGGER.info("[Nova API] Authenticated with Dedicated Server.");
+                    return true;
                 } else {
-                    NovaAPI.LOGGER.warn("[Nova API] Authentication failed: {}", response);
+                    NovaAPI.LOGGER.warn("[Nova API] Dedicated Server denied access: {}", resp);
+                    return false;
                 }
-
-            } catch (Exception e) {
-                NovaAPI.LOGGER.error("[Nova API] Secure connection to API server failed.", e);
             }
-
         } catch (Exception e) {
-            NovaAPI.LOGGER.error("[Nova API] Unable to initialize secure socket.", e);
+            NovaAPI.LOGGER.error("[Nova API] Failed to connect/authenticate to Dedicated Server.", e);
+            return false;
         }
     }
 

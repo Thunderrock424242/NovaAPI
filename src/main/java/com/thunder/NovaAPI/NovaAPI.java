@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI;
 
+import com.thunder.NovaAPI.chunk.ChunkPreloader;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import com.thunder.NovaAPI.server.NovaAPIServerManager;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
@@ -11,10 +12,12 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
@@ -56,6 +59,7 @@ public class NovaAPI {
         // Register mod setup and creative tabs
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addCreative);
+        container.registerConfig(ModConfig.Type.COMMON, NovaAPIConfig.CONFIG);
 
         // Register global events
         NeoForge.EVENT_BUS.register(this);
@@ -78,12 +82,30 @@ public class NovaAPI {
      */
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        MinecraftServer server = event.getServer();
-        NovaAPIServerManager.connectToDedicatedServer("127.0.0.1", server);
-        if (!NovaAPIConfig.ENABLE_DEDICATED_SERVER.get()) {
-            NovaAPIServerManager.startLocalServer();
-        }
 
+    }
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        MinecraftServer server = event.getServer();
+
+        if (NovaAPIConfig.ENABLE_DEDICATED_SERVER.get()) {
+            boolean ok = NovaAPIServerManager.connectToDedicatedServer(
+                    NovaAPIConfig.DEDICATED_SERVER_IP.get(),
+                    server
+            );
+            if (!ok) {
+                LOGGER.warn("[Nova API] Could not reach Dedicated Server; falling back to Local Mode.");
+                startLocalServer();
+            }
+            // if ok, we remain in Dedicated Mode and skip local init
+        } else {
+            startLocalServer();
+        }
+    }
+    private static void startLocalServer() {
+        LOGGER.info("[Nova API] Starting in Local Mode...");
+        // chunk, AI, async registration as before...
     }
 
     /**
@@ -104,7 +126,7 @@ public class NovaAPI {
      */
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        com.thunder.NovaAPI.chunk.ChunkPreloader.shutdown();
+        ChunkPreloader.shutdown();
         NovaAPI.shutdown(); // Stop monitoring when server shuts down
     }
 

@@ -61,6 +61,7 @@ public class NovaAPI {
         modEventBus.addListener(this::addCreative);
         container.registerConfig(ModConfig.Type.COMMON, NovaAPIConfig.CONFIG);
 
+
         // Register global events
         NeoForge.EVENT_BUS.register(this);
 

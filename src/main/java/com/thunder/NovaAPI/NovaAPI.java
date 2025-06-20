@@ -2,6 +2,7 @@ package com.thunder.NovaAPI;
 
 import com.thunder.NovaAPI.chunk.ChunkPreloader;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
+import com.thunder.NovaAPI.optimizations.PathfindingOptimizer;
 import com.thunder.NovaAPI.server.NovaAPIServerManager;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
 import net.minecraft.network.FriendlyByteBuf;
@@ -69,6 +70,9 @@ public class NovaAPI {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() ->
+                PathfindingOptimizer.initialize(NovaAPIConfig.PATHFINDING_THREAD_COUNT.get())
+        );
 
     }
 

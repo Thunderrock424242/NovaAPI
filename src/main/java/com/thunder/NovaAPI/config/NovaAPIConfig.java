@@ -18,11 +18,6 @@ public class NovaAPIConfig {
     public static final ModConfigSpec.BooleanValue ASYNC_CHUNK_LOADING;
     public static final ModConfigSpec.BooleanValue SMART_CHUNK_RETENTION;
 
-    // 🔹 AI Pathfinding Optimization
-    public static final ModConfigSpec.BooleanValue ENABLE_AI_OPTIMIZATIONS;
-    public static final ModConfigSpec.IntValue PATHFINDING_THREAD_COUNT;
-
-
     static {
         BUILDER.push("General Settings");
         ENABLE_NOVA_API = BUILDER
@@ -49,15 +44,6 @@ public class NovaAPIConfig {
         SMART_CHUNK_RETENTION = BUILDER
                 .comment("Keep frequently accessed chunks loaded for longer to prevent constant reloads.")
                 .define("smartChunkRetention", true);
-        BUILDER.pop();
-
-        BUILDER.push("AI Pathfinding Optimization");
-        ENABLE_AI_OPTIMIZATIONS = BUILDER
-                .comment("Enable multi-threaded AI pathfinding for better performance.")
-                .define("enableAIOptimizations", true);
-        PATHFINDING_THREAD_COUNT = BUILDER
-                .comment("Number of threads for AI pathfinding (Higher = better performance but more CPU usage).")
-                .defineInRange("pathfindingThreadCount", 4, 1, 16);
         BUILDER.pop();
 
         CONFIG = BUILDER.build();

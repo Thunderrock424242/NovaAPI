@@ -3,7 +3,6 @@ package com.thunder.NovaAPI.server;
 import com.thunder.NovaAPI.NovaAPI;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import com.thunder.NovaAPI.optimizations.AsyncWorldGenHandler;
-import com.thunder.NovaAPI.optimizations.PathfindingOptimizer;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
@@ -42,7 +41,6 @@ public class NovaAPIServerManager {
         // AI Pathfinding Optimization
         if (NovaAPIConfig.ENABLE_AI_OPTIMIZATIONS.get()) {
             int threadCount = NovaAPIConfig.PATHFINDING_THREAD_COUNT.get();
-            PathfindingOptimizer.initialize(threadCount); // Ensure you have this method
             NovaAPI.LOGGER.info("[Nova API] AI Pathfinding initialized with {} thread(s).", threadCount);
         }
 

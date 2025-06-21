@@ -22,6 +22,7 @@ public class NovaAPIConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_AI_OPTIMIZATIONS;
     public static final ModConfigSpec.IntValue PATHFINDING_THREAD_COUNT;
 
+
     static {
         BUILDER.push("General Settings");
         ENABLE_NOVA_API = BUILDER

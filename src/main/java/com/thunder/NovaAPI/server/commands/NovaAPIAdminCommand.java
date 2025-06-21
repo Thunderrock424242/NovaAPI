@@ -75,10 +75,6 @@ public class NovaAPIAdminCommand {
         boolean chunkOpt = NovaAPIConfig.ENABLE_CHUNK_OPTIMIZATIONS.get();
         source.sendSuccess((Supplier<Component>) Component.literal("§eChunk Optimization: §f" + (chunkOpt ? "Enabled" : "Disabled")), false);
 
-        boolean aiEnabled = NovaAPIConfig.ENABLE_AI_OPTIMIZATIONS.get();
-        int aiThreads = NovaAPIConfig.PATHFINDING_THREAD_COUNT.get();
-        source.sendSuccess((Supplier<Component>) Component.literal("§eAI Optimization: §f" + (aiEnabled ? aiThreads + " thread(s)" : "Disabled")), false);
-
         boolean async = NovaAPIConfig.ASYNC_CHUNK_LOADING.get();
         source.sendSuccess((Supplier<Component>) Component.literal("§eAsync Chunk Loading: §f" + (async ? "Enabled" : "Disabled")), false);
 

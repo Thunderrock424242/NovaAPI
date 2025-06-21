@@ -38,12 +38,6 @@ public class NovaAPIServerManager {
     public static void startLocalServer() {
         NovaAPI.LOGGER.info("[Nova API] Starting in Local Mode...");
 
-        // AI Pathfinding Optimization
-        if (NovaAPIConfig.ENABLE_AI_OPTIMIZATIONS.get()) {
-            int threadCount = NovaAPIConfig.PATHFINDING_THREAD_COUNT.get();
-            NovaAPI.LOGGER.info("[Nova API] AI Pathfinding initialized with {} thread(s).", threadCount);
-        }
-
         // Async Chunk Loading
         if (NovaAPIConfig.ASYNC_CHUNK_LOADING.get()) {
             AsyncWorldGenHandler.enable(); // Optional if you’re using async support

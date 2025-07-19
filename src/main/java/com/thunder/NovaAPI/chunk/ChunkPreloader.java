@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 
 public class ChunkPreloader {
-    private static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() - 1;
+    private static final int THREAD_POOL_SIZE = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
     private static final ExecutorService CHUNK_LOADING_EXECUTOR = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final ConcurrentLinkedQueue<ChunkLoadRequest> chunkQueue = new ConcurrentLinkedQueue<>();
 

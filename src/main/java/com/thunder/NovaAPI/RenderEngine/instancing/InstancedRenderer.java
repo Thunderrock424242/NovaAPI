@@ -34,30 +34,6 @@ public class InstancedRenderer {
             GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, entityList.size());
         }
 
-        GL30.glBindVertexArray(0);
-
-
-
-
-
-        for (Entity entity : entities) {
-            if (!frustum.isVisible(entity.getBoundingBox())) continue;
-
-            ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
-            batched.computeIfAbsent(modelPath, k -> new ArrayList<>()).add(entity);
-        }
-
-        for (Map.Entry<ResourceLocation, List<Entity>> entry : batched.entrySet()) {
-            ResourceLocation modelPath = entry.getKey();
-            List<Entity> entityList = entry.getValue();
-
-            int vao = VAOManager.getOrLoadVAO(modelPath);
-            if (!VAOManager.isModelEnabled(modelPath) || vao <= 0) continue;
-
-            GL30.glBindVertexArray(vao);
-            GL31.glDrawElementsInstanced(GL30.GL_TRIANGLES, 36, GL30.GL_UNSIGNED_INT, 0, entityList.size());
-        }
-
         GL30.glBindVertexArray(0); // clean unbind
     }
 }

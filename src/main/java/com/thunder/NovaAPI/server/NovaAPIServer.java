@@ -12,6 +12,10 @@ public class NovaAPIServer {
     private static final int PORT = 25565;
     private static final Set<String> whitelistedServers = new HashSet<>();
     private static final Map<Socket, String> connectedServers = new HashMap<>();
+    private static final Map<String, String> syncStore = new HashMap<>();
+    private static final java.util.concurrent.ConcurrentLinkedQueue<ChunkRequest> preloadQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
+    private record ChunkRequest(int x, int z) { }
 
     public static void main(String[] args) {
         System.out.println("[Nova API Server] Starting...");
@@ -91,6 +95,84 @@ public class NovaAPIServer {
 
     private static void handleMessage(Socket socket, String message) {
         System.out.println("[Nova API Server] Received from " + connectedServers.get(socket) + ": " + message);
-        // TODO: Process chunk preloading, pathfinding, and sync requests
+
+        String[] parts = message.trim().split("\\s+");
+        if (parts.length == 0) return;
+
+        String cmd = parts[0].toUpperCase();
+        switch (cmd) {
+            case "PING" -> sendMessage(socket, "PONG");
+            case "PRELOAD" -> handlePreload(socket, parts);
+            case "PATHFIND" -> handlePathfind(socket, parts);
+            case "SYNC" -> handleSync(socket, parts);
+            default -> sendMessage(socket, "ERR Unknown command");
+        }
+    }
+
+    private static void handlePreload(Socket socket, String[] parts) {
+        if (parts.length < 3) {
+            sendMessage(socket, "ERR Usage: PRELOAD <x> <z>");
+            return;
+        }
+        try {
+            int x = Integer.parseInt(parts[1]);
+            int z = Integer.parseInt(parts[2]);
+            preloadQueue.add(new ChunkRequest(x, z));
+            sendMessage(socket, "OK");
+        } catch (NumberFormatException e) {
+            sendMessage(socket, "ERR Invalid coordinates");
+        }
+    }
+
+    private static void handlePathfind(Socket socket, String[] parts) {
+        if (parts.length < 5) {
+            sendMessage(socket, "ERR Usage: PATHFIND <sx> <sz> <ex> <ez>");
+            return;
+        }
+        try {
+            int sx = Integer.parseInt(parts[1]);
+            int sz = Integer.parseInt(parts[2]);
+            int ex = Integer.parseInt(parts[3]);
+            int ez = Integer.parseInt(parts[4]);
+
+            java.util.List<String> nodes = new java.util.ArrayList<>();
+            int x = sx;
+            int z = sz;
+            while (x != ex) {
+                nodes.add(x + "," + z);
+                x += Integer.signum(ex - x);
+            }
+            while (z != ez) {
+                nodes.add(x + "," + z);
+                z += Integer.signum(ez - z);
+            }
+            nodes.add(ex + "," + ez);
+            sendMessage(socket, String.join(";", nodes));
+        } catch (NumberFormatException e) {
+            sendMessage(socket, "ERR Invalid coordinates");
+        }
+    }
+
+    private static void handleSync(Socket socket, String[] parts) {
+        if (parts.length == 2) {
+            String val = syncStore.get(parts[1]);
+            sendMessage(socket, val == null ? "NULL" : val);
+        } else if (parts.length >= 3) {
+            syncStore.put(parts[1], parts[2]);
+            sendMessage(socket, "OK");
+        } else {
+            sendMessage(socket, "ERR Usage: SYNC <key> [value]");
+        }
+    }
+
+    private static void sendMessage(Socket socket, String response) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            writer.write(response);
+            writer.write('\n');
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println("[Nova API Server] Failed to send response: " + e.getMessage());
+        }
     }
 }

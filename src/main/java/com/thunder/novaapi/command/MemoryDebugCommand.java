@@ -1,6 +1,6 @@
 package com.thunder.novaapi.command;
 
-import com.thunder.novaapi.NovaAPI;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.novaapi.cache.RegionScopedCache;
 import com.thunder.novaapi.task.BackgroundTaskScheduler;
 import com.mojang.brigadier.CommandDispatcher;

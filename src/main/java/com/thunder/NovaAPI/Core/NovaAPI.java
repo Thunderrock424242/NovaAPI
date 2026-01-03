@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI;
+package com.thunder.NovaAPI.Core;
 
 import com.thunder.NovaAPI.AI.AI_perf.PerformanceAdvisor;
 import com.thunder.NovaAPI.AI.AI_perf.PerformanceAdvisoryRequest;

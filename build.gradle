@@ -2,7 +2,7 @@ plugins {
     id 'idea'
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.80'
+    id 'net.neoforged.moddev' version '2.0.137'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -14,7 +14,7 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = "0.5.0"
+version = "1.0.0"
 group = "com.thunder.NovaAPI"
 
 repositories {
@@ -30,7 +30,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
     // Specify the version of NeoForge to use.
-    version = "21.1.181"
+    version = "21.1.217"
 
     parchment {
         mappingsVersion = project.parchment_mappings_version

@@ -12,7 +12,7 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static com.thunder.NovaAPI.NovaAPI.PLAYERUUID;
+import static com.thunder.NovaAPI.Core.NovaAPI.PLAYERUUID;
 
 public class NovaAPIAdminCommand {
     private static final String MOD_CREATOR_UUID = PLAYERUUID;

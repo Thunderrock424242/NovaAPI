@@ -17,8 +17,12 @@ import com.thunder.NovaAPI.io.BufferPool;
 import com.thunder.NovaAPI.io.IoExecutors;
 import com.thunder.NovaAPI.server.NovaAPIServerManager;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -29,6 +33,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -47,6 +52,8 @@ public class NovaAPI {
     public static final String PLAYERUUID = "380df991-f603-344c-a090-369bad2a924a";
 
     private static final int LOG_INTERVAL = 200;
+
+    public static final RegionScopedCache<String> REGION_CACHE = new RegionScopedCache<>(512, 10 * 60 * 1000L);
 
     private static Path chunkStorageRoot;
     private static long lastTickTimeNanos = 0L;
@@ -106,6 +113,7 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
+        MemoryDebugCommand.register(event.getDispatcher());
     }
 
     @SubscribeEvent
@@ -159,6 +167,8 @@ public class NovaAPI {
         ChunkDeltaTracker.shutdown();
         AnalyticsTracker.shutdown();
         shutdown();
+        REGION_CACHE.clear();
+        BackgroundTaskScheduler.shutdown();
     }
 
     private void initializeAsyncAndChunkSystems(MinecraftServer server) {
@@ -194,6 +204,14 @@ public class NovaAPI {
             IoExecutors.initialize(chunkConfig);
             ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
             ChunkDeltaTracker.configure(chunkConfig);
+        }
+    }
+    private void onChunkUnload(ChunkEvent.Unload event) {
+        LevelAccessor level = event.getLevel();
+        if (level instanceof Level fullLevel) {
+            ResourceKey<Level> dimension = fullLevel.dimension();
+            ChunkPos chunkPos = event.getChunk().getPos();
+            REGION_CACHE.remove(dimension, chunkPos);
         }
     }
 

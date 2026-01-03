@@ -7,7 +7,6 @@ import com.thunder.NovaAPI.analytics.AnalyticsTracker;
 import com.thunder.NovaAPI.async.AsyncTaskManager;
 import com.thunder.NovaAPI.async.AsyncThreadingConfig;
 import com.thunder.NovaAPI.chunk.ChunkDeltaTracker;
-import com.thunder.NovaAPI.chunk.ChunkPreloader;
 import com.thunder.NovaAPI.chunk.ChunkStoragePaths;
 import com.thunder.NovaAPI.chunk.ChunkStreamManager;
 import com.thunder.NovaAPI.chunk.ChunkStreamingConfig;
@@ -159,7 +158,6 @@ public class NovaAPI {
         IoExecutors.shutdown();
         ChunkDeltaTracker.shutdown();
         AnalyticsTracker.shutdown();
-        ChunkPreloader.shutdown();
         shutdown();
     }
 

@@ -17,7 +17,6 @@ import com.thunder.NovaAPI.command.MemoryDebugCommand;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import com.thunder.NovaAPI.io.BufferPool;
 import com.thunder.NovaAPI.io.IoExecutors;
-import com.thunder.NovaAPI.server.NovaAPIServerManager;
 import com.thunder.NovaAPI.task.BackgroundTaskScheduler;
 import com.thunder.NovaAPI.utils.ThreadMonitor;
 import net.minecraft.resources.ResourceKey;
@@ -95,22 +94,6 @@ public class NovaAPI {
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
-
-        if (NovaAPIConfig.ENABLE_DEDICATED_SERVER.get()) {
-            boolean ok = NovaAPIServerManager.connectToDedicatedServer(
-                    NovaAPIConfig.DEDICATED_SERVER_IP.get(),
-                    server
-            );
-            if (!ok) {
-                LOGGER.warn("[NovaAPI] Could not reach Dedicated Server; falling back to Local Mode.");
-                startLocalServer();
-            }
-        } else {
-            startLocalServer();
-        }
-    }
-
-    private static void startLocalServer() {
         LOGGER.info("[NovaAPI] Starting in Local Mode...");
     }
 

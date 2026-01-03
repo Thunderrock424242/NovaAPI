@@ -9,10 +9,6 @@ public class NovaAPIConfig {
     // 🔹 General Settings
     public static final ModConfigSpec.BooleanValue ENABLE_NOVA_API;
 
-    // 🔹 Dedicated Server Settings
-    public static final ModConfigSpec.BooleanValue ENABLE_DEDICATED_SERVER;
-    public static final ModConfigSpec.ConfigValue<String> DEDICATED_SERVER_IP;
-
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
     public static final ModConfigSpec.BooleanValue ASYNC_CHUNK_LOADING;
@@ -23,15 +19,6 @@ public class NovaAPIConfig {
         ENABLE_NOVA_API = BUILDER
                 .comment("Enable Nova API. If false, all features are disabled.")
                 .define("enableNovaAPI", true);
-        BUILDER.pop();
-
-        BUILDER.push("Dedicated Server Settings");
-        ENABLE_DEDICATED_SERVER = BUILDER
-                .comment("Enable Dedicated Mode (Connect to Nova API Server).")
-                .define("enableDedicatedServer", false);
-        DEDICATED_SERVER_IP = BUILDER
-                .comment("Dedicated Nova API Server Address (if Dedicated Mode is enabled).")
-                .define("dedicatedServerIP", "127.0.0.1");
         BUILDER.pop();
 
         BUILDER.push("Chunk Optimization Settings");

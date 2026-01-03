@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.SavingSystem;
 
-import com.thunder.NovaAPI.NovaAPI;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;

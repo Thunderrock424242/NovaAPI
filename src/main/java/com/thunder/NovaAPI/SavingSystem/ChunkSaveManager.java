@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.SavingSystem;
 
-import com.thunder.NovaAPI.NovaAPI;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerChunkCache;
@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.thunder.NovaAPI.NovaAPI.MOD_ID;
+import static com.thunder.NovaAPI.Core.NovaAPI.MOD_ID;
+
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ChunkSaveManager {

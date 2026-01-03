@@ -1,9 +1,10 @@
 package com.thunder.NovaAPI.io;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.chunk.ChunkStreamingConfig;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import org.checkerframework.checker.units.qual.N;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -37,7 +38,7 @@ public final class IoExecutors {
         config = values;
         sharedExecutor = buildExecutor("WO-IO-Shared", values.ioThreads(), values.ioQueueSize());
         INITIALIZED.set(true);
-        ModConstants.LOGGER.info("[IO] Initialized executors (per-dimension: {}, threads: {}, queue: {}).",
+        NovaAPI.LOGGER.info("[IO] Initialized executors (per-dimension: {}, threads: {}, queue: {}).",
                 values.perDimensionExecutors(), values.ioThreads(), values.ioQueueSize());
     }
 
@@ -58,7 +59,7 @@ public final class IoExecutors {
         try {
             return CompletableFuture.runAsync(task, executor);
         } catch (RejectedExecutionException ex) {
-            ModConstants.LOGGER.warn("[IO] Executor '{}' rejected task '{}'; running synchronously.",
+            NovaAPI.LOGGER.warn("[IO] Executor '{}' rejected task '{}'; running synchronously.",
                     executor.getThreadFactory(), label);
             task.run();
             return CompletableFuture.completedFuture(null);
@@ -113,7 +114,7 @@ public final class IoExecutors {
             long now = System.nanoTime();
             long last = lastLoggedNanos.get();
             if (now - last > TimeUnit.SECONDS.toNanos(5) && lastLoggedNanos.compareAndSet(last, now)) {
-                ModConstants.LOGGER.warn(
+                NovaAPI.LOGGER.warn(
                         "[IO] Executor '{}' saturated (active: {}, queued: {}). Running tasks on caller thread.",
                         prefix,
                         executor.getActiveCount(),

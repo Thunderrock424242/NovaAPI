@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.util;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.nbt.ByteArrayTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
@@ -35,7 +35,7 @@ import java.util.zip.InflaterInputStream;
  */
 public final class NbtDataCompactor {
 
-    private static final String MOD_DATA_KEY = ModConstants.MOD_ID;
+    private static final String MOD_DATA_KEY = NovaAPI.MOD_ID;
     private static final String RESOURCE_TABLE_KEY = "_wo_rl_table";
     private static final String RESOURCE_REF_KEY = "_wo_rl_ref";
     private static final String FLATTENED_KEY = "_wo_flattened";
@@ -261,7 +261,7 @@ public final class NbtDataCompactor {
                     insertAtPath(tag, path, restored);
                 }
             } catch (IOException e) {
-                ModConstants.LOGGER.debug("Failed to restore flattened tag {}.", path, e);
+                NovaAPI.LOGGER.debug("Failed to restore flattened tag {}.", path, e);
             }
         }
         tag.remove(FLATTENED_KEY);
@@ -289,7 +289,7 @@ public final class NbtDataCompactor {
             deflater.finish();
             return raw.toByteArray();
         } catch (IOException e) {
-            ModConstants.LOGGER.debug("Failed to serialize nested compound for compaction.", e);
+            NovaAPI.LOGGER.debug("Failed to serialize nested compound for compaction.", e);
             return new byte[0];
         }
     }
@@ -356,7 +356,7 @@ public final class NbtDataCompactor {
                 default -> null;
             };
         } catch (IOException e) {
-            ModConstants.LOGGER.debug("Failed to decompress custom blob.", e);
+            NovaAPI.LOGGER.debug("Failed to decompress custom blob.", e);
             return null;
         }
     }
@@ -368,7 +368,7 @@ public final class NbtDataCompactor {
             deflater.finish();
             return out.toByteArray();
         } catch (IOException e) {
-            ModConstants.LOGGER.debug("Failed to compress blob.", e);
+            NovaAPI.LOGGER.debug("Failed to compress blob.", e);
             return data;
         }
     }

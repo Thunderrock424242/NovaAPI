@@ -1,5 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 
@@ -21,6 +22,6 @@ public final class ChunkStoragePaths {
             Path worldConfig = server.getWorldPath(LevelResource.ROOT).resolve("serverconfig");
             return worldConfig.resolve(folderName);
         }
-        return server.getFile("config/" + com.thunder.NovaAPI.Core.ModConstants.MOD_ID + "/" + folderName);
+        return server.getFile("config/" + NovaAPI.MOD_ID + "/" + folderName);
     }
 }

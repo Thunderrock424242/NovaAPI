@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.AI.AI_perf;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -124,7 +124,7 @@ public final class PerformanceMitigationController {
             case "entity-ticking" -> applyEntityTickThrottle(server, 3, action.getDurationSeconds());
             case "chunk-processing" -> applyChunkMitigation(server, 1, action.getDurationSeconds());
             default -> {
-                ModConstants.LOGGER.warn("Unknown subsystem {} in performance action {}", action.getSubsystem(), action.getId());
+                NovaAPI.LOGGER.warn("Unknown subsystem {} in performance action {}", action.getSubsystem(), action.getId());
                 return;
             }
         }
@@ -171,7 +171,7 @@ public final class PerformanceMitigationController {
                 rollbackChunkMitigation(server);
                 chunkDistanceUntil = 0L;
             }
-            default -> ModConstants.LOGGER.warn("Unknown rollback subsystem {} for action {}", action.getSubsystem(), action.getId());
+            default -> NovaAPI.LOGGER.warn("Unknown rollback subsystem {} for action {}", action.getSubsystem(), action.getId());
         }
         action.getRollbackOfId()
                 .flatMap(ACTION_QUEUE::findActive)

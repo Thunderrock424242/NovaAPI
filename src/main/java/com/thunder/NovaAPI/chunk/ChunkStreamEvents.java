@@ -1,8 +1,7 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkDataEvent;
@@ -12,7 +11,7 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 /**
  * Bridges vanilla chunk lifecycle events to the chunk streaming pipeline.
  */
-@EventBusSubscriber(modid = ModConstants.MOD_ID)
+@EventBusSubscriber(modid = NovaAPI.MOD_ID)
 public final class ChunkStreamEvents {
     private ChunkStreamEvents() {
     }

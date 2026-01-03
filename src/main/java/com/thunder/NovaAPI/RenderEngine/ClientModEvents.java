@@ -1,7 +1,7 @@
 package com.thunder.NovaAPI.RenderEngine;
 
 
-import com.thunder.NovaAPI.NovaAPI;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.RenderEngine.Threading.ModdedRenderInterceptor;
 import com.thunder.NovaAPI.RenderEngine.instancing.InstancedRenderer;
 import net.minecraft.client.Minecraft;
@@ -11,7 +11,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
-import static com.thunder.NovaAPI.NovaAPI.MOD_ID;
+import static com.thunder.NovaAPI.Core.NovaAPI.MOD_ID;
+
 
 @EventBusSubscriber(modid = MOD_ID)
 public class ClientModEvents {

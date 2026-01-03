@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.AI.AI_perf;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -10,7 +10,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 /**
  * Performs lightweight, main-thread throttles once an action is approved.
  */
-@EventBusSubscriber(modid = ModConstants.MOD_ID)
+@EventBusSubscriber(modid = NovaAPI.MOD_ID)
 public class PerformanceMitigationHandler {
 
     @SubscribeEvent

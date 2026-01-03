@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.io.BufferPool;
 import com.thunder.NovaAPI.io.IoExecutors;
 import net.minecraft.nbt.CompoundTag;
@@ -79,7 +79,7 @@ public final class ChunkStreamManager {
         HOT_CACHE.clear();
         ioController = new ChunkIoController(() -> config, () -> storageAdapter, null);
         scheduleWriteFlush();
-        ModConstants.LOGGER.info("[ChunkStream] Initialized (hot cache: {}, warm cache: {}, debounce: {} ticks)",
+        NovaAPI.LOGGER.info("[ChunkStream] Initialized (hot cache: {}, warm cache: {}, debounce: {} ticks)",
                 config.hotCacheLimit(), config.warmCacheLimit(), config.saveDebounceTicks());
     }
 
@@ -247,8 +247,8 @@ public final class ChunkStreamManager {
             }
             entry.tickets.entrySet().removeIf(ticket -> {
                 boolean isExpired = ticket.getValue().isExpired(gameTime);
-                if (isExpired && ModConstants.LOGGER.isTraceEnabled()) {
-                    ModConstants.LOGGER.trace("[ChunkStream][{}] Ticket {} expired at tick {}.", pos, ticket.getKey(), gameTime);
+                if (isExpired && NovaAPI.LOGGER.isTraceEnabled()) {
+                    NovaAPI.LOGGER.trace("[ChunkStream][{}] Ticket {} expired at tick {}.", pos, ticket.getKey(), gameTime);
                 }
                 return isExpired;
             });
@@ -358,12 +358,12 @@ public final class ChunkStreamManager {
         if (removeState) {
             STATE.remove(pos);
         }
-        ModConstants.LOGGER.debug("[ChunkStream] Evicted chunk {} ({})", pos, reason);
+        NovaAPI.LOGGER.debug("[ChunkStream] Evicted chunk {} ({})", pos, reason);
     }
 
     private static void dropChunkBuffers(ChunkPos pos) {
         // Placeholder for future mesh/light buffer cleanup hooks.
-        ModConstants.LOGGER.trace("[ChunkStream] Dropping cached buffers for {}", pos);
+        NovaAPI.LOGGER.trace("[ChunkStream] Dropping cached buffers for {}", pos);
     }
 
     public static boolean isWarmCached(ChunkPos pos) {
@@ -381,8 +381,8 @@ public final class ChunkStreamManager {
 
         void upsertTicket(ChunkPos pos, ChunkTicketType type, long expiryTick) {
             tickets.put(type, new ChunkTicket(type, expiryTick));
-            if (ModConstants.LOGGER.isTraceEnabled()) {
-                ModConstants.LOGGER.trace("[ChunkStream][{}] Upserted ticket {} expiring at tick {}.", pos, type, expiryTick);
+            if (NovaAPI.LOGGER.isTraceEnabled()) {
+                NovaAPI.LOGGER.trace("[ChunkStream][{}] Upserted ticket {} expiring at tick {}.", pos, type, expiryTick);
             }
         }
 
@@ -394,8 +394,8 @@ public final class ChunkStreamManager {
             if (newState == ChunkState.UNLOADED || newState.ordinal() >= state.ordinal() || allowDemotion) {
                 ChunkState previous = state;
                 state = newState;
-                if (ModConstants.LOGGER.isTraceEnabled()) {
-                    ModConstants.LOGGER.trace("[ChunkStream][{}] State {} -> {}.", pos, previous, newState);
+                if (NovaAPI.LOGGER.isTraceEnabled()) {
+                    NovaAPI.LOGGER.trace("[ChunkStream][{}] State {} -> {}.", pos, previous, newState);
                 }
             }
         }
@@ -464,7 +464,7 @@ public final class ChunkStreamManager {
             );
             if (dispatchLoad(values, request)) {
                 return request.future().exceptionally(ex -> {
-                    ModConstants.LOGGER.error("[ChunkStream] Failed to read chunk {}", pos, ex);
+                    NovaAPI.LOGGER.error("[ChunkStream] Failed to read chunk {}", pos, ex);
                     return Optional.empty();
                 });
             }
@@ -473,13 +473,13 @@ public final class ChunkStreamManager {
             int queued = pendingLoadCount.incrementAndGet();
             if (queued > queueLimit) {
                 pendingLoadCount.decrementAndGet();
-                ModConstants.LOGGER.warn("[ChunkStream] Load queue full ({}); dropping request for {}", queueLimit, pos);
+                NovaAPI.LOGGER.warn("[ChunkStream] Load queue full ({}); dropping request for {}", queueLimit, pos);
                 request.future().complete(Optional.empty());
                 return request.future();
             }
             pendingLoadQueue.offer(request);
             return request.future().exceptionally(ex -> {
-                ModConstants.LOGGER.error("[ChunkStream] Failed to read chunk {}", pos, ex);
+                NovaAPI.LOGGER.error("[ChunkStream] Failed to read chunk {}", pos, ex);
                 return Optional.empty();
             });
         }
@@ -597,7 +597,7 @@ public final class ChunkStreamManager {
                         statusEntry.setLastPersisted(payload.copy());
                     }
                 } catch (Exception e) {
-                    ModConstants.LOGGER.error("[ChunkStream] Failed to write chunk {}", pos, e);
+                    NovaAPI.LOGGER.error("[ChunkStream] Failed to write chunk {}", pos, e);
                     completion.completeExceptionally(e);
                 }
             }).whenComplete((ignored, throwable) -> {
@@ -643,8 +643,8 @@ public final class ChunkStreamManager {
                 loadTasks.remove(request.pos());
                 inFlight.decrementAndGet();
                 long queuedDurationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - request.enqueuedAt());
-                if (ModConstants.LOGGER.isDebugEnabled() && queuedDurationMs > 0) {
-                    ModConstants.LOGGER.debug("[ChunkStream] Load {} waited {} ms before execution (queue size: {}).",
+                if (NovaAPI.LOGGER.isDebugEnabled() && queuedDurationMs > 0) {
+                    NovaAPI.LOGGER.debug("[ChunkStream] Load {} waited {} ms before execution (queue size: {}).",
                             request.pos(), queuedDurationMs, pendingLoadCount.get());
                 }
                 drainQueuedLoads(values);
@@ -722,7 +722,7 @@ public final class ChunkStreamManager {
             try {
                 adapter.write(pos, payload);
             } catch (Exception e) {
-                ModConstants.LOGGER.error("[ChunkStream] Failed to flush chunk {}", pos, e);
+                NovaAPI.LOGGER.error("[ChunkStream] Failed to flush chunk {}", pos, e);
             }
         }
     }
@@ -748,7 +748,7 @@ public final class ChunkStreamManager {
             try {
                 ioController.tick(lastGameTime.get());
             } catch (Exception e) {
-                ModConstants.LOGGER.error("[ChunkStream] Scheduled write flush failed", e);
+                NovaAPI.LOGGER.error("[ChunkStream] Scheduled write flush failed", e);
             }
         }, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
     }

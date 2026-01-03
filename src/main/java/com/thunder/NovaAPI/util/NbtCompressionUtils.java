@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.util;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.io.BufferPool;
 import com.thunder.NovaAPI.io.CompressionCodec;
 import com.thunder.NovaAPI.io.IoExecutors;
@@ -94,7 +94,7 @@ public final class NbtCompressionUtils {
             CompoundTag tag = readCompressed(target, codec);
             writeCompressed(target, tag, compressionLevel, codec);
         } catch (IOException e) {
-            ModConstants.LOGGER.debug("Failed to recompress NBT file {}", target, e);
+            NovaAPI.LOGGER.debug("Failed to recompress NBT file {}", target, e);
         }
     }
 
@@ -150,7 +150,7 @@ public final class NbtCompressionUtils {
         }
         synchronized (MISSING_CODEC_WARNED) {
             if (MISSING_CODEC_WARNED.add(codec)) {
-                ModConstants.LOGGER.warn("Missing {} codec dependency on the runtime classpath; falling back to vanilla GZIP", codec, missingCodec);
+                NovaAPI.LOGGER.warn("Missing {} codec dependency on the runtime classpath; falling back to vanilla GZIP", codec, missingCodec);
             }
         }
     }

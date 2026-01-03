@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.server;
 
-import com.thunder.NovaAPI.NovaAPI;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.config.NovaAPIConfig;
 import com.thunder.NovaAPI.optimizations.AsyncWorldGenHandler;
 import net.minecraft.server.MinecraftServer;

@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -164,7 +164,7 @@ public final class ChunkDeltaTracker {
             deflater.finish();
             return baos.toByteArray();
         } catch (IOException e) {
-            ModConstants.LOGGER.warn("[ChunkDelta] Failed to compress light band, sending raw", e);
+            NovaAPI.LOGGER.warn("[ChunkDelta] Failed to compress light band, sending raw", e);
             return data.clone();
         }
     }

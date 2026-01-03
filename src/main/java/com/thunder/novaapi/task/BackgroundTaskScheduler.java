@@ -1,4 +1,4 @@
-package com.thunder.novaapi.task;
+package com.thunder.NovaAPI.task;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;

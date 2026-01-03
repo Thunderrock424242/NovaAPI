@@ -1,9 +1,9 @@
-package com.thunder.novaapi.command;
+package com.thunder.NovaAPI.command;
 
 import com.thunder.NovaAPI.Core.NovaAPI;
-import com.thunder.novaapi.cache.RegionScopedCache;
-import com.thunder.novaapi.task.BackgroundTaskScheduler;
 import com.mojang.brigadier.CommandDispatcher;
+import com.thunder.NovaAPI.cache.RegionScopedCache;
+import com.thunder.NovaAPI.task.BackgroundTaskScheduler;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;

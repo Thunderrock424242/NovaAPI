@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -39,7 +39,7 @@ final class ChunkSliceCache {
                 int sectionY = section.getByte("Y");
                 long hash = dedupeBiomeSlice(section, biomeHashes, sectionY);
                 if (hash != 0L) {
-                    ModConstants.LOGGER.trace("[ChunkStream] Cached biome slice hash {} for {} @ section {}", hash, pos, sectionY);
+                    NovaAPI.LOGGER.trace("[ChunkStream] Cached biome slice hash {} for {} @ section {}", hash, pos, sectionY);
                 }
             }
         }

@@ -2,7 +2,7 @@ package com.thunder.NovaAPI.analytics;
 
 import com.sun.management.OperatingSystemMXBean;
 import com.thunder.NovaAPI.AI.AI_perf.PerformanceAdvisor;
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.MemUtils.MemoryUtils;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -17,7 +17,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
-import static com.thunder.NovaAPI.Core.ModConstants.MOD_ID;
+import static com.thunder.NovaAPI.Core.NovaAPI.MOD_ID;
+
 
 /**
  * Samples resource usage and streams it to the global chat relay for external consumption.
@@ -42,7 +43,7 @@ public class AnalyticsTracker {
 
     public static void initialize(MinecraftServer minecraftServer, Path configDir) {
         server = minecraftServer;
-        Path file = configDir.resolve(ModConstants.MOD_ID + "/analytics-access.json");
+        Path file = configDir.resolve(NovaAPI.MOD_ID + "/analytics-access.json");
         accessSettings = AnalyticsAccessSettings.load(file);
         accessSettings.save(file);
     }
@@ -115,7 +116,7 @@ public class AnalyticsTracker {
         worstTickTimeNanos = 0L;
         previousSnapshot = lastSnapshot;
         lastSnapshot = snapshot;
-        ModConstants.LOGGER.debug("[Analytics] Sent snapshot: players={}, cpuLoad={} tick={}ms", snapshot.playerCount,
+        NovaAPI.LOGGER.debug("[Analytics] Sent snapshot: players={}, cpuLoad={} tick={}ms", snapshot.playerCount,
                 snapshot.cpuLoad, snapshot.worstTickMillis);
     }
 

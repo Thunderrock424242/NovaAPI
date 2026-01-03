@@ -1,10 +1,11 @@
 package com.thunder.NovaAPI.utils;
 
+import com.thunder.NovaAPI.Core.NovaAPI;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
-import static com.thunder.NovaAPI.NovaAPI.LOGGER;
 
 public class ThreadMonitor {
 
@@ -23,14 +24,14 @@ public class ThreadMonitor {
                 try {
                     Thread.sleep(CHECK_INTERVAL_MS);
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Thread monitor interrupted", e);
+                    NovaAPI.LOGGER.warn("Thread monitor interrupted", e);
                 }
             }
         }, "Nova-ThreadMonitor");
 
         monitorThread.setDaemon(true); // Allow JVM to exit without waiting
         monitorThread.start();
-        LOGGER.info("✅ Nova API Thread Monitor started.");
+        NovaAPI.LOGGER.info("✅ Nova API Thread Monitor started.");
     }
 
     public static void stopMonitoring() {
@@ -42,10 +43,10 @@ public class ThreadMonitor {
 
     private static void logAllThreads() {
         Map<Thread, StackTraceElement[]> threads = Thread.getAllStackTraces();
-        LOGGER.debug("📌 Active Threads: {}", threads.size());
+        NovaAPI.LOGGER.debug("📌 Active Threads: {}", threads.size());
 
         for (Thread thread : threads.keySet()) {
-            LOGGER.trace("🧵 Thread Name: {} | ID: {} | State: {} | Priority: {}",
+            NovaAPI.LOGGER.trace("🧵 Thread Name: {} | ID: {} | State: {} | Priority: {}",
                     thread.getName(), thread.getId(), thread.getState(), thread.getPriority());
         }
     }
@@ -55,14 +56,14 @@ public class ThreadMonitor {
         long[] deadlockedThreadIds = threadBean.findDeadlockedThreads();
 
         if (deadlockedThreadIds != null && deadlockedThreadIds.length > 0) {
-            LOGGER.warn("⚠️ WARNING: Deadlocked threads detected!");
+            NovaAPI.LOGGER.warn("⚠️ WARNING: Deadlocked threads detected!");
             ThreadInfo[] deadlockedThreads = threadBean.getThreadInfo(deadlockedThreadIds);
             for (ThreadInfo info : deadlockedThreads) {
-                LOGGER.error("🚨 Deadlocked Thread: {} | State: {} | Lock Owner: {}",
+                NovaAPI.LOGGER.error("🚨 Deadlocked Thread: {} | State: {} | Lock Owner: {}",
                         info.getThreadName(), info.getThreadState(), info.getLockOwnerName());
             }
         } else {
-            LOGGER.debug("✅ No deadlocked threads detected.");
+            NovaAPI.LOGGER.debug("✅ No deadlocked threads detected.");
         }
     }
 }

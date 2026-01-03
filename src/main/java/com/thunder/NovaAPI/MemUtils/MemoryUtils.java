@@ -1,6 +1,7 @@
 package com.thunder.NovaAPI.MemUtils;
 
-import static com.thunder.NovaAPI.Core.ModConstants.LOGGER;
+
+import com.thunder.NovaAPI.Core.NovaAPI;
 
 /**
  * Utility methods for inspecting runtime memory usage and recommending RAM
@@ -27,8 +28,8 @@ public class MemoryUtils {
         long used = getUsedMemoryMB();
         if (used > peakUsedMB) {
             peakUsedMB = used;
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("New peak memory usage recorded: {} MB", peakUsedMB);
+            if (NovaAPI.LOGGER.isDebugEnabled()) {
+                NovaAPI.LOGGER.debug("New peak memory usage recorded: {} MB", peakUsedMB);
             }
         }
     }
@@ -56,7 +57,7 @@ public class MemoryUtils {
         if (used != lastLoggedUsedMB && (now - lastUsedLogTimestampMs) >= USED_LOG_INTERVAL_MS) {
             lastLoggedUsedMB = used;
             lastUsedLogTimestampMs = now;
-            LOGGER.debug(
+            NovaAPI.LOGGER.debug(
                     "Calculated used memory: {} MB (total={} MB, free={} MB)",
                     used,
                     total / MB,
@@ -75,7 +76,7 @@ public class MemoryUtils {
         long totalMB = total / MB;
         if (totalMB != lastLoggedTotalMB) {
             lastLoggedTotalMB = totalMB;
-            LOGGER.debug("Total memory allocated: {} MB", totalMB);
+            NovaAPI.LOGGER.debug("Total memory allocated: {} MB", totalMB);
         }
         return totalMB;
     }
@@ -89,8 +90,8 @@ public class MemoryUtils {
      */
     private static int lastRecommendedMB = -1;
     public static int calculateRecommendedRAM(long currentUsedMB, int modCount) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Calculating recommended RAM with currentUsedMB={} and modCount={}", currentUsedMB, modCount);
+        if (NovaAPI.LOGGER.isDebugEnabled()) {
+            NovaAPI.LOGGER.debug("Calculating recommended RAM with currentUsedMB={} and modCount={}", currentUsedMB, modCount);
         }
         int extraPer10Mods = (modCount / 10) * 128;
         int recommendedMB = BASE_RECOMMENDED_MB + extraPer10Mods;
@@ -100,8 +101,8 @@ public class MemoryUtils {
         }
         if (recommendedMB != lastRecommendedMB) {
             lastRecommendedMB = recommendedMB;
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Recommended RAM determined to be {} MB", recommendedMB);
+            if (NovaAPI.LOGGER.isDebugEnabled()) {
+                NovaAPI.LOGGER.debug("Recommended RAM determined to be {} MB", recommendedMB);
             }
         }
         return recommendedMB;

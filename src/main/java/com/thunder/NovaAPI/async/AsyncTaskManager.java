@@ -1,6 +1,6 @@
 package com.thunder.NovaAPI.async;
 
-import com.thunder.NovaAPI.Core.ModConstants;
+import com.thunder.NovaAPI.Core.NovaAPI;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.Objects;
@@ -50,7 +50,7 @@ public final class AsyncTaskManager {
         configValues = Objects.requireNonNull(config, "config");
 
         if (!config.enabled()) {
-            ModConstants.LOGGER.info("[Async] Async task system disabled via config.");
+            NovaAPI.LOGGER.info("[Async] Async task system disabled via config.");
             INITIALIZED.set(false);
             return;
         }
@@ -58,7 +58,7 @@ public final class AsyncTaskManager {
         cpuExecutor = buildExecutor("WO-Async-CPU", config.maxThreads(), config.queueSize());
         ioExecutor = buildExecutor("WO-Async-IO", Math.max(1, Math.min(2, config.maxThreads())), config.queueSize());
         INITIALIZED.set(true);
-        ModConstants.LOGGER.info("[Async] Initialized with {} worker threads and queue size {}.", config.maxThreads(), config.queueSize());
+        NovaAPI.LOGGER.info("[Async] Initialized with {} worker threads and queue size {}.", config.maxThreads(), config.queueSize());
     }
 
     /**
@@ -100,7 +100,7 @@ public final class AsyncTaskManager {
                     }
                     return result.filter(task -> !timedOut.get() && enqueueMainThreadTask(label, task)).isPresent();
                 } catch (Exception e) {
-                    ModConstants.LOGGER.error("[Async] Task '{}' failed", label, e);
+                    NovaAPI.LOGGER.error("[Async] Task '{}' failed", label, e);
                     return false;
                 }
             }, executor);
@@ -111,9 +111,9 @@ public final class AsyncTaskManager {
                             if (ex instanceof TimeoutException) {
                                 timedOut.set(true);
                                 workerFuture.cancel(true);
-                                ModConstants.LOGGER.warn("[Async] Task '{}' timed out after {} ms", label, configValues.taskTimeoutMs());
+                                NovaAPI.LOGGER.warn("[Async] Task '{}' timed out after {} ms", label, configValues.taskTimeoutMs());
                             } else {
-                                ModConstants.LOGGER.error("[Async] Task '{}' failed", label, ex);
+                                NovaAPI.LOGGER.error("[Async] Task '{}' failed", label, ex);
                             }
                             return false;
                         });
@@ -121,7 +121,7 @@ public final class AsyncTaskManager {
             return workerFuture;
         } catch (RejectedExecutionException ex) {
             int rejected = REJECTED.incrementAndGet();
-            ModConstants.LOGGER.warn("[Async] Rejected task '{}' ({} queued, total rejections: {}).", label, executor.getQueue().size(), rejected);
+            NovaAPI.LOGGER.warn("[Async] Rejected task '{}' ({} queued, total rejections: {}).", label, executor.getQueue().size(), rejected);
             return CompletableFuture.completedFuture(false);
         }
     }
@@ -133,7 +133,7 @@ public final class AsyncTaskManager {
         if (backlog > maxQueue) {
             MAIN_THREAD_BACKLOG.decrementAndGet();
             REJECTED.incrementAndGet();
-            ModConstants.LOGGER.warn("[Async] Main-thread queue full ({}). Dropping task '{}'.", maxQueue, label);
+            NovaAPI.LOGGER.warn("[Async] Main-thread queue full ({}). Dropping task '{}'.", maxQueue, label);
             return false;
         }
 
@@ -141,9 +141,9 @@ public final class AsyncTaskManager {
         if (!offered) {
             MAIN_THREAD_BACKLOG.decrementAndGet();
             REJECTED.incrementAndGet();
-            ModConstants.LOGGER.warn("[Async] Failed to enqueue main-thread task '{}'.", label);
+            NovaAPI.LOGGER.warn("[Async] Failed to enqueue main-thread task '{}'.", label);
         } else if (configValues.debugLogging()) {
-            ModConstants.LOGGER.info("[Async] Queued main-thread task '{}' (backlog: {}).", label, backlog);
+            NovaAPI.LOGGER.info("[Async] Queued main-thread task '{}' (backlog: {}).", label, backlog);
         }
         return offered;
     }
@@ -163,7 +163,7 @@ public final class AsyncTaskManager {
             try {
                 task.run(server);
             } catch (Exception e) {
-                ModConstants.LOGGER.error("[Async] Error applying main-thread task", e);
+                NovaAPI.LOGGER.error("[Async] Error applying main-thread task", e);
             }
             processed++;
         }
@@ -215,7 +215,7 @@ public final class AsyncTaskManager {
             long now = System.nanoTime();
             long last = lastLoggedNanos.get();
             if (now - last > TimeUnit.SECONDS.toNanos(5) && lastLoggedNanos.compareAndSet(last, now)) {
-                ModConstants.LOGGER.warn(
+                NovaAPI.LOGGER.warn(
                         "[Async] Executor '{}' saturated (active: {}, queued: {}). Running task on caller thread ({} total).",
                         prefix,
                         executor.getActiveCount(),

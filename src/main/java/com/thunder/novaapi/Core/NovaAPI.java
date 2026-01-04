@@ -87,11 +87,10 @@ public class NovaAPI {
         modEventBus.addListener(this::onConfigLoaded);
         modEventBus.addListener(this::onConfigReloaded);
 
-        container.registerConfig(ModConfig.Type.COMMON, NovaAPIConfig.CONFIG);
-        container.registerConfig(ModConfig.Type.COMMON, AsyncThreadingConfig.CONFIG_SPEC, "novaapi-async.toml");
-        container.registerConfig(ModConfig.Type.COMMON, ChunkStreamingConfig.CONFIG_SPEC, "novaapi-chunk-streaming.toml");
-
         NeoForge.EVENT_BUS.register(this);
+
+        ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, NovaAPIConfig.CONFIG,
+                CONFIG_FOLDER + "wildernessodysseyapi-common.toml");
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ModDataCacheConfig.CONFIG_SPEC,
                 CONFIG_FOLDER + "wildernessodysseyapi-cache.toml");

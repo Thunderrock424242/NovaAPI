@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.util;
+package com.thunder.NovaAPI.utils;
 
 import com.thunder.NovaAPI.Core.NovaAPI;
 import com.thunder.NovaAPI.io.BufferPool;

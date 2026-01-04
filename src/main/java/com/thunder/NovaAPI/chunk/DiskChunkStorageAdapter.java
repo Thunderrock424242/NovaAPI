@@ -1,8 +1,8 @@
 package com.thunder.NovaAPI.chunk;
 
-import com.thunder.NovaAPI.util.NbtCompressionUtils;
+import com.thunder.NovaAPI.utils.NbtCompressionUtils;
 import com.thunder.NovaAPI.io.CompressionCodec;
-import com.thunder.NovaAPI.util.NbtDataCompactor;
+import com.thunder.NovaAPI.utils.NbtDataCompactor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 

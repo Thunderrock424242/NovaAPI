@@ -259,6 +259,8 @@ public class NovaAPI {
             ChunkDeltaTracker.configure(chunkConfig);
         }
     }
+
+    @SubscribeEvent
     private void onChunkUnload(ChunkEvent.Unload event) {
         LevelAccessor level = event.getLevel();
         if (level instanceof Level fullLevel) {

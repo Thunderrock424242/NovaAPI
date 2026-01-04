@@ -63,7 +63,6 @@ import java.util.concurrent.TimeUnit;
 public class NovaAPI {
     public static final Logger LOGGER = LogManager.getLogger("novaapi");
     public static final String MOD_ID = "novaapi";
-    public static final String PLAYERUUID = "380df991-f603-344c-a090-369bad2a924a";
 
     private static final int LOG_INTERVAL = 600;
     public static int dynamicModCount = 0;

@@ -260,6 +260,10 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter tasks.named('test')
 }
 
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
 tasks.register('profileChunkWorkload', JavaExec) {
     group = 'performance'
     description = 'Executes the chunk workload driver with JFR and optional async-profiler attached.'

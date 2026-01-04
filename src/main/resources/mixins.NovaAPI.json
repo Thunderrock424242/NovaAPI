@@ -4,9 +4,8 @@
   "package": "com.thunder.novaapi.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "MobAccessors",
-    "MobNavigationMixin",
-    "ModelDataMixin"
+    "ModelDataMixin",
+    "ServerLevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

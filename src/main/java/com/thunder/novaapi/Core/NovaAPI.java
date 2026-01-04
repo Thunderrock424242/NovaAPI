@@ -89,21 +89,21 @@ public class NovaAPI {
         NeoForge.EVENT_BUS.register(this);
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, NovaAPIConfig.CONFIG,
-                CONFIG_FOLDER + "wildernessodysseyapi-common.toml");
+                CONFIG_FOLDER + "novaapi-common.toml");
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ModDataCacheConfig.CONFIG_SPEC,
-                CONFIG_FOLDER + "wildernessodysseyapi-cache.toml");
+                CONFIG_FOLDER + "novaapi-cache.toml");
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, AsyncThreadingConfig.CONFIG_SPEC,
-                CONFIG_FOLDER + "wildernessodysseyapi-async.toml");
+                CONFIG_FOLDER + "novaapi-async.toml");
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ChunkStreamingConfig.CONFIG_SPEC,
-                CONFIG_FOLDER + "wildernessodysseyapi-chunk-streaming.toml");
+                CONFIG_FOLDER + "novaapi-chunk-streaming.toml");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
-            System.out.println("Wilderness Odyssey setup complete!");
+            System.out.println("Nova API setup complete!");
             ModDataCache.initialize();
         });
         dynamicModCount = ModList.get().getMods().size();

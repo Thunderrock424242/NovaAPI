@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin {
     @Inject(method = "tickChunk", at = @At("HEAD"), cancellable = true)
-    private void wildernessodysseyapi$skipWarmCached(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
+    private void novaapi$skipWarmCached(LevelChunk chunk, int randomTickSpeed, CallbackInfo ci) {
         if (ChunkTickThrottler.shouldSkipWarmTicking(chunk.getPos())) {
             ci.cancel();
         }
     }
 
     @ModifyVariable(method = "tickChunk", at = @At("HEAD"), argsOnly = true, ordinal = 0)
-    private int wildernessodysseyapi$scaleRandomTicks(int randomTickSpeed, LevelChunk chunk) {
+    private int novaapi$scaleRandomTicks(int randomTickSpeed, LevelChunk chunk) {
         return ChunkTickThrottler.scaleRandomTickDensity((ServerLevel) (Object) this, chunk.getPos(), randomTickSpeed);
     }
 }

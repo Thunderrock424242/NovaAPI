@@ -1,4 +1,4 @@
-package com.thunder.NovaAPI.cache;
+package com.thunder.novaapi.cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;

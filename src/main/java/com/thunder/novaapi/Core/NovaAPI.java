@@ -71,6 +71,8 @@ public class NovaAPI {
 
 
     public static final RegionScopedCache<String> REGION_CACHE = new RegionScopedCache<>(512, 10 * 60 * 1000L);
+    private boolean asyncInitialized = false;
+    private boolean chunkStreamingInitialized = false;
 
     private static Path chunkStorageRoot;
     private static long lastTickTimeNanos = 0L;
@@ -116,16 +118,8 @@ public class NovaAPI {
     public void onServerStarting(ServerStartingEvent event) {
         MinecraftServer server = event.getServer();
         initializeAsyncAndChunkSystems(server);
-        AnalyticsTracker.initialize(server, server.getFile("config"));
         ThreadMonitor.startMonitoring();
-        AsyncTaskManager.initialize(AsyncThreadingConfig.values());
-        ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
-        BufferPool.configure(chunkConfig);
-        IoExecutors.initialize(chunkConfig);
-        chunkStorageRoot = ChunkStoragePaths.resolveCacheRoot(event.getServer(), chunkConfig);
-        ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
-        ChunkDeltaTracker.configure(chunkConfig);
-        AnalyticsTracker.initialize(event.getServer(), event.getServer().getFile("config"));
+        AnalyticsTracker.initialize(server, server.getFile("config"));
     }
 
     @SubscribeEvent
@@ -216,14 +210,38 @@ public class NovaAPI {
         BackgroundTaskScheduler.shutdown();
     }
 
+    private void restartAsyncSystems() {
+        if (asyncInitialized) {
+            AsyncTaskManager.shutdown();
+        }
+        AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+        asyncInitialized = true;
+    }
+
+    private void restartChunkStreaming() {
+        if (!chunkStreamingInitialized || chunkStorageRoot == null) {
+            return;
+        }
+        ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
+        ChunkStreamManager.shutdown();
+        IoExecutors.shutdown();
+        BufferPool.configure(chunkConfig);
+        IoExecutors.initialize(chunkConfig);
+        ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
+        ChunkDeltaTracker.configure(chunkConfig);
+        chunkStreamingInitialized = true;
+    }
+
     private void initializeAsyncAndChunkSystems(MinecraftServer server) {
         AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+        asyncInitialized = true;
         ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
         BufferPool.configure(chunkConfig);
         IoExecutors.initialize(chunkConfig);
         chunkStorageRoot = ChunkStoragePaths.resolveCacheRoot(server, chunkConfig);
         ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
         ChunkDeltaTracker.configure(chunkConfig);
+        chunkStreamingInitialized = true;
     }
 
     public void onConfigLoaded(ModConfigEvent.Loading event) {
@@ -231,14 +249,10 @@ public class NovaAPI {
             ModDataCache.initialize();
         }
         if (event.getConfig().getSpec() == AsyncThreadingConfig.CONFIG_SPEC) {
-            AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+            restartAsyncSystems();
         }
         if (event.getConfig().getSpec() == ChunkStreamingConfig.CONFIG_SPEC && chunkStorageRoot != null) {
-            ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
-            BufferPool.configure(chunkConfig);
-            IoExecutors.initialize(chunkConfig);
-            ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
-            ChunkDeltaTracker.configure(chunkConfig);
+            restartChunkStreaming();
         }
     }
 
@@ -247,14 +261,10 @@ public class NovaAPI {
             ModDataCache.initialize();
         }
         if (event.getConfig().getSpec() == AsyncThreadingConfig.CONFIG_SPEC) {
-            AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+            restartAsyncSystems();
         }
         if (event.getConfig().getSpec() == ChunkStreamingConfig.CONFIG_SPEC && chunkStorageRoot != null) {
-            ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
-            BufferPool.configure(chunkConfig);
-            IoExecutors.initialize(chunkConfig);
-            ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
-            ChunkDeltaTracker.configure(chunkConfig);
+            restartChunkStreaming();
         }
     }
 

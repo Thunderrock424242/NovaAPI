@@ -8,7 +8,6 @@ public class NovaAPIConfig {
 
     // 🔹 General Settings
     public static final ModConfigSpec.BooleanValue ENABLE_NOVA_API;
-    public static final ModConfigSpec.BooleanValue ENABLE_DEBUG_LOGGING;
 
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
@@ -20,9 +19,6 @@ public class NovaAPIConfig {
         ENABLE_NOVA_API = BUILDER
                 .comment("Enable Nova API. If false, all features are disabled.")
                 .define("enableNovaAPI", true);
-        ENABLE_DEBUG_LOGGING = BUILDER
-                .comment("Enable NovaAPI debug-level logging without changing Minecraft's global log level.")
-                .define("enableDebugLogging", false);
         BUILDER.pop();
 
         BUILDER.push("Chunk Optimization Settings");

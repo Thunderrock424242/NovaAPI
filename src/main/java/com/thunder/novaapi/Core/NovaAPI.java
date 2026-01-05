@@ -22,6 +22,7 @@ import com.thunder.novaapi.chunk.ChunkTickThrottler;
 import com.thunder.novaapi.command.*;
 import com.thunder.novaapi.config.ConfigRegistrationValidator;
 import com.thunder.novaapi.config.NovaAPIConfig;
+import com.thunder.novaapi.config.DebugLoggingConfigurator;
 import com.thunder.novaapi.io.BufferPool;
 import com.thunder.novaapi.io.IoExecutors;
 import com.thunder.novaapi.task.BackgroundTaskScheduler;
@@ -101,6 +102,8 @@ public class NovaAPI {
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ChunkStreamingConfig.CONFIG_SPEC,
                 CONFIG_FOLDER + "novaapi-chunk-streaming.toml");
+
+        DebugLoggingConfigurator.apply(LOGGER);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -245,6 +248,9 @@ public class NovaAPI {
     }
 
     public void onConfigLoaded(ModConfigEvent.Loading event) {
+        if (event.getConfig().getSpec() == NovaAPIConfig.CONFIG) {
+            DebugLoggingConfigurator.apply(LOGGER);
+        }
         if (event.getConfig().getSpec() == ModDataCacheConfig.CONFIG_SPEC) {
             ModDataCache.initialize();
         }
@@ -257,6 +263,9 @@ public class NovaAPI {
     }
 
     public void onConfigReloaded(ModConfigEvent.Reloading event) {
+        if (event.getConfig().getSpec() == NovaAPIConfig.CONFIG) {
+            DebugLoggingConfigurator.apply(LOGGER);
+        }
         if (event.getConfig().getSpec() == ModDataCacheConfig.CONFIG_SPEC) {
             ModDataCache.initialize();
         }

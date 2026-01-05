@@ -55,6 +55,8 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -80,6 +82,7 @@ public class NovaAPI {
     private static long worstTickTimeNanos = 0L;
     private static int serverTickCounter = 0;
     private final requestperfadvice requestperfadvice = new requestperfadvice();
+    private static boolean debugLoggingEnabled = false;
 
     public NovaAPI(IEventBus modEventBus, ModContainer container) {
         LOGGER.info("NovaAPI initialized with async + chunk streaming pipeline.");
@@ -289,5 +292,16 @@ public class NovaAPI {
 
     public static void shutdown() {
         ThreadMonitor.stopMonitoring();
+    }
+
+    private void applyDebugLoggingConfig() {
+        boolean enableDebug = NovaAPIConfig.ENABLE_DEBUG_LOGGING.get();
+        if (enableDebug == debugLoggingEnabled) {
+            return;
+        }
+        debugLoggingEnabled = enableDebug;
+        Level targetLevel = enableDebug ? Level.DEBUG : Level.INFO;
+        Configurator.setLevel(LOGGER.getName(), targetLevel);
+        LOGGER.info("[NovaAPI] {} debug logging.", enableDebug ? "Enabled" : "Disabled");
     }
 }

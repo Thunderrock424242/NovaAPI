@@ -1,6 +1,7 @@
 package com.thunder.novaapi.chunk;
 
 import com.thunder.novaapi.Core.NovaAPI;
+import com.thunder.novaapi.io.BufferPool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -8,8 +9,8 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.zip.DeflaterOutputStream;
 public final class ChunkDeltaTracker {
     private static final ConcurrentMap<ChunkPos, ChunkDeltaAccumulator> DIRTY_CHUNKS = new ConcurrentHashMap<>();
     private static final ConcurrentMap<UUID, PlayerLightCache> PLAYER_LIGHT_CACHE = new ConcurrentHashMap<>();
+    private static final ThreadLocal<Deflater> LIGHT_DEFLATER = ThreadLocal.withInitial(Deflater::new);
 
     private static ChunkStreamingConfig.ChunkConfigValues config = ChunkStreamingConfig.values();
 
@@ -158,11 +160,15 @@ public final class ChunkDeltaTracker {
         if (data == null || data.length == 0) {
             return new byte[0];
         }
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(data.length);
-             DeflaterOutputStream deflater = new DeflaterOutputStream(baos, new Deflater(config.lightCompressionLevel()))) {
-            deflater.write(data);
-            deflater.finish();
-            return baos.toByteArray();
+        try (BufferPool.PooledByteArrayOutputStream baos = BufferPool.byteArrayOutputStream()) {
+            Deflater deflater = LIGHT_DEFLATER.get();
+            deflater.reset();
+            deflater.setLevel(config.lightCompressionLevel());
+            try (DeflaterOutputStream deflaterStream = new DeflaterOutputStream(baos, deflater, true)) {
+                deflaterStream.write(data);
+                deflaterStream.finish();
+            }
+            return Arrays.copyOf(baos.directBuffer(), baos.currentSize());
         } catch (IOException e) {
             NovaAPI.LOGGER.warn("[ChunkDelta] Failed to compress light band, sending raw", e);
             return data.clone();

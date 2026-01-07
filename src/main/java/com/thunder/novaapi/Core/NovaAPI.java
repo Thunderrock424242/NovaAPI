@@ -7,7 +7,6 @@ import com.thunder.novaapi.AI.AI_perf.PerformanceMitigationController;
 import com.thunder.novaapi.AI.AI_perf.requestperfadvice;
 import com.thunder.novaapi.MemUtils.MemCheckCommand;
 import com.thunder.novaapi.MemUtils.MemoryUtils;
-import com.thunder.novaapi.analytics.AnalyticsTracker;
 import com.thunder.novaapi.async.AsyncTaskManager;
 import com.thunder.novaapi.async.AsyncThreadingConfig;
 import com.thunder.novaapi.cache.ModDataCache;
@@ -119,7 +118,6 @@ public class NovaAPI {
         MinecraftServer server = event.getServer();
         initializeAsyncAndChunkSystems(server);
         ThreadMonitor.startMonitoring();
-        AnalyticsTracker.initialize(server, server.getFile("config"));
     }
 
     @SubscribeEvent
@@ -137,7 +135,6 @@ public class NovaAPI {
         AsyncStatsCommand.register(dispatcher);
         ChunkStatsCommand.register(dispatcher);
         DebugChunkCommand.register(dispatcher);
-        AnalyticsCommand.register(dispatcher);
     }
 
     @SubscribeEvent
@@ -204,7 +201,6 @@ public class NovaAPI {
         ChunkStreamManager.shutdown();
         IoExecutors.shutdown();
         ChunkDeltaTracker.shutdown();
-        AnalyticsTracker.shutdown();
         shutdown();
         REGION_CACHE.clear();
         BackgroundTaskScheduler.shutdown();

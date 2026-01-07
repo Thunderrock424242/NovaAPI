@@ -11,7 +11,10 @@ import net.minecraft.nbt.NbtIo;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.lang.reflect.Constructor;
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -21,6 +24,8 @@ import java.util.zip.GZIPOutputStream;
 public final class NbtCompressionUtils {
 
     private static final EnumSet<CompressionCodec> MISSING_CODEC_WARNED = EnumSet.noneOf(CompressionCodec.class);
+    private static final Map<String, Constructor<? extends InputStream>> INPUT_CONSTRUCTORS = new ConcurrentHashMap<>();
+    private static final Map<String, Constructor<? extends OutputStream>> OUTPUT_CONSTRUCTORS = new ConcurrentHashMap<>();
 
     private NbtCompressionUtils() {
     }
@@ -178,10 +183,22 @@ public final class NbtCompressionUtils {
 
     private static InputStream createOptionalInputStream(String className, InputStream source) throws IOException {
         try {
-            Class<?> codecClass = Class.forName(className);
-            return InputStream.class.cast(codecClass.getConstructor(InputStream.class).newInstance(source));
+            Constructor<? extends InputStream> ctor = INPUT_CONSTRUCTORS.computeIfAbsent(className, key -> {
+                try {
+                    Class<?> codecClass = Class.forName(key);
+                    @SuppressWarnings("unchecked")
+                    Constructor<? extends InputStream> constructor = (Constructor<? extends InputStream>) codecClass.getConstructor(InputStream.class);
+                    constructor.setAccessible(true);
+                    return constructor;
+                } catch (ReflectiveOperationException e) {
+                    throw new ConstructorLookupFailure(e);
+                }
+            });
+            return ctor.newInstance(source);
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             throw missingCodec(className, e);
+        } catch (ConstructorLookupFailure e) {
+            throw new IOException("Failed to initialize " + className, e.getCause());
         } catch (ReflectiveOperationException e) {
             throw new IOException("Failed to initialize " + className, e);
         }
@@ -189,10 +206,22 @@ public final class NbtCompressionUtils {
 
     private static OutputStream createOptionalOutputStream(String className, OutputStream target) throws IOException {
         try {
-            Class<?> codecClass = Class.forName(className);
-            return OutputStream.class.cast(codecClass.getConstructor(OutputStream.class).newInstance(target));
+            Constructor<? extends OutputStream> ctor = OUTPUT_CONSTRUCTORS.computeIfAbsent(className, key -> {
+                try {
+                    Class<?> codecClass = Class.forName(key);
+                    @SuppressWarnings("unchecked")
+                    Constructor<? extends OutputStream> constructor = (Constructor<? extends OutputStream>) codecClass.getConstructor(OutputStream.class);
+                    constructor.setAccessible(true);
+                    return constructor;
+                } catch (ReflectiveOperationException e) {
+                    throw new ConstructorLookupFailure(e);
+                }
+            });
+            return ctor.newInstance(target);
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             throw missingCodec(className, e);
+        } catch (ConstructorLookupFailure e) {
+            throw new IOException("Failed to initialize " + className, e.getCause());
         } catch (ReflectiveOperationException e) {
             throw new IOException("Failed to initialize " + className, e);
         }
@@ -202,5 +231,11 @@ public final class NbtCompressionUtils {
         NoClassDefFoundError error = new NoClassDefFoundError(className);
         error.initCause(cause);
         return error;
+    }
+
+    private static final class ConstructorLookupFailure extends RuntimeException {
+        private ConstructorLookupFailure(Throwable cause) {
+            super(cause);
+        }
     }
 }

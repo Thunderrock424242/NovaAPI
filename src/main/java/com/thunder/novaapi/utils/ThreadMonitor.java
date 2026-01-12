@@ -47,7 +47,7 @@ public class ThreadMonitor {
 
         for (Thread thread : threads.keySet()) {
             NovaAPI.LOGGER.trace("🧵 Thread Name: {} | ID: {} | State: {} | Priority: {}",
-                    thread.getName(), thread.getId(), thread.getState(), thread.getPriority());
+                    thread.getName(), thread.threadId(), thread.getState(), thread.getPriority());
         }
     }
 

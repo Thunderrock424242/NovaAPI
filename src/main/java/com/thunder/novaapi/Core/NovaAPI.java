@@ -21,6 +21,7 @@ import com.thunder.novaapi.chunk.ChunkTickThrottler;
 import com.thunder.novaapi.command.*;
 import com.thunder.novaapi.config.ConfigRegistrationValidator;
 import com.thunder.novaapi.config.NovaAPIConfig;
+import com.thunder.novaapi.config.PerformanceMitigationConfig;
 import com.thunder.novaapi.io.BufferPool;
 import com.thunder.novaapi.io.IoExecutors;
 import com.thunder.novaapi.task.BackgroundTaskScheduler;
@@ -100,6 +101,9 @@ public class NovaAPI {
 
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ChunkStreamingConfig.CONFIG_SPEC,
                 CONFIG_FOLDER + "novaapi-chunk-streaming.toml");
+
+        ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, PerformanceMitigationConfig.CONFIG_SPEC,
+                CONFIG_FOLDER + "novaapi-performance-mitigation.toml");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

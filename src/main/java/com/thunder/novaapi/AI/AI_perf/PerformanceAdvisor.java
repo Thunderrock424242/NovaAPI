@@ -3,6 +3,7 @@ package com.thunder.novaapi.AI.AI_perf;
 import com.thunder.novaapi.chunk.ChunkStreamManager;
 import com.thunder.novaapi.chunk.ChunkStreamStats;
 import com.thunder.novaapi.chunk.ChunkStreamingConfig;
+import com.thunder.novaapi.config.PerformanceMitigationConfig;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
@@ -34,6 +35,7 @@ public final class PerformanceAdvisor {
 
         ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
         ChunkStreamStats chunkStats = ChunkStreamManager.snapshot();
+        PerformanceMitigationConfig.PerformanceMitigationValues mitigationConfig = PerformanceMitigationConfig.values();
 
         for (ServerLevel level : server.getAllLevels()) {
             heaviestMobCluster = Math.max(heaviestMobCluster, estimateMobCluster(level));
@@ -62,6 +64,14 @@ public final class PerformanceAdvisor {
                         : "Dense mob clusters increase goal-switching costs (peak: " + heaviestMobCluster + ")."
         ));
         subsystems.add(buildChunkStreamingLoad(chunkConfig, chunkStats, maxLoadedChunks, totalLoadedChunks));
+        PerformanceAdvisoryRequest.SubsystemLoad renderDistanceLoad = buildRenderDistanceLoad(
+                mitigationConfig,
+                worstTickMillis,
+                chunkConfig,
+                chunkStats);
+        if (renderDistanceLoad != null) {
+            subsystems.add(renderDistanceLoad);
+        }
         subsystems.add(new PerformanceAdvisoryRequest.SubsystemLoad(
                 "world-ticking",
                 "Overall world ticking exceeded the frame budget.",
@@ -168,6 +178,19 @@ public final class PerformanceAdvisor {
                 yield "Chunk load is within configured headroom; keep hot/warm caches at "
                         + chunkConfig.hotCacheLimit() + "/" + chunkConfig.warmCacheLimit() + " and monitor pending saves.";
             }
+            case "render-distance" -> {
+                PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.values();
+                if (!config.renderDistanceEnabled()) {
+                    yield "Render-distance mitigation is disabled in config; keep render distance steady and monitor spikes.";
+                }
+                String details = "Lower client view distance by " + config.renderDistanceViewDrop()
+                        + " and entity distance by " + config.renderDistanceEntityDrop()
+                        + " chunks for a short window until FPS stabilizes.";
+                if (config.renderDistanceViewDrop() <= 0 && config.renderDistanceEntityDrop() <= 0) {
+                    details = "Render-distance mitigation has no drop configured; adjust view/entity drops to enable.";
+                }
+                yield details;
+            }
             case "world-ticking" -> load.observedValue() > DEFAULT_TICK_BUDGET_MS
                     ? "Apply short-term throttles (simulation distance -1, mob cap easing) until ticks return under budget."
                     : "Tick time within budget; no global throttle needed.";
@@ -237,11 +260,47 @@ public final class PerformanceAdvisor {
         );
     }
 
+    private static PerformanceAdvisoryRequest.SubsystemLoad buildRenderDistanceLoad(
+            PerformanceMitigationConfig.PerformanceMitigationValues config,
+            long worstTickMillis,
+            ChunkStreamingConfig.ChunkConfigValues chunkConfig,
+            ChunkStreamStats chunkStats) {
+        if (!config.renderDistanceEnabled()) {
+            return null;
+        }
+        boolean fpsSpike = worstTickMillis >= config.renderDistanceFpsThresholdMs();
+        double queuePressure = renderQueuePressure(chunkConfig, chunkStats);
+        boolean queueSpike = queuePressure >= config.renderDistanceQueuePressureThreshold();
+        if (!fpsSpike && !queueSpike) {
+            return null;
+        }
+
+        long observed = Math.round(Math.max(worstTickMillis, queuePressure * 100.0D));
+        String evidence = String.format(
+                "Worst tick %d ms (threshold %d ms). Render queue pressure %.2f (threshold %.2f).",
+                worstTickMillis,
+                config.renderDistanceFpsThresholdMs(),
+                queuePressure,
+                config.renderDistanceQueuePressureThreshold());
+
+        return new PerformanceAdvisoryRequest.SubsystemLoad(
+                "render-distance",
+                "Render-distance pressure detected; FPS or render queue spikes observed.",
+                "Suggest temporary view distance and entity render distance reductions until pressure drops.",
+                observed,
+                evidence);
+    }
+
     private static double saturation(int used, int capacity) {
         if (capacity <= 0) {
             return 0.0D;
         }
         return Math.min(2.0D, used / (double) capacity);
+    }
+
+    private static double renderQueuePressure(ChunkStreamingConfig.ChunkConfigValues chunkConfig, ChunkStreamStats chunkStats) {
+        int ioCapacity = Math.max(1, chunkConfig.ioQueueSize() * Math.max(1, chunkConfig.maxParallelIo()));
+        return saturation(chunkStats.ioQueueDepth(), ioCapacity);
     }
 
     private static ChunkTuningSuggestion recommendTuning(ChunkStreamingConfig.ChunkConfigValues config,

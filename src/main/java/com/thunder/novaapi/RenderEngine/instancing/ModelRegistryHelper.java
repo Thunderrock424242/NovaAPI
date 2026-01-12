@@ -43,4 +43,25 @@ public class ModelRegistryHelper {
         return entityModelMap.getOrDefault(type,
                 ResourceLocation.tryParse("minecraft:models/entity/default.json"));
     }
+
+    /**
+     * Returns a LOD-specific model path for the given EntityType.
+     * LOD 0 is the base model path, while higher LODs append "#lodX".
+     */
+    public static ResourceLocation getLodModelPath(EntityType<?> type, int lod) {
+        return getLodModelPath(getModelPath(type), lod);
+    }
+
+    /**
+     * Returns a LOD-specific model path for the given base model path.
+     * LOD 0 is the base model path, while higher LODs append "#lodX".
+     */
+    public static ResourceLocation getLodModelPath(ResourceLocation basePath, int lod) {
+        if (lod <= 0 || basePath == null) {
+            return basePath;
+        }
+
+        ResourceLocation lodPath = ResourceLocation.tryParse(basePath + "#lod" + lod);
+        return lodPath != null ? lodPath : basePath;
+    }
 }

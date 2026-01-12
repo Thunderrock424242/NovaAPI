@@ -195,7 +195,7 @@ public final class NbtCompressionUtils {
                 }
             });
             return ctor.newInstance(source);
-        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+        } catch (NoClassDefFoundError e) {
             throw missingCodec(className, e);
         } catch (ConstructorLookupFailure e) {
             throw new IOException("Failed to initialize " + className, e.getCause());
@@ -218,7 +218,7 @@ public final class NbtCompressionUtils {
                 }
             });
             return ctor.newInstance(target);
-        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+        } catch (NoClassDefFoundError e) {
             throw missingCodec(className, e);
         } catch (ConstructorLookupFailure e) {
             throw new IOException("Failed to initialize " + className, e.getCause());

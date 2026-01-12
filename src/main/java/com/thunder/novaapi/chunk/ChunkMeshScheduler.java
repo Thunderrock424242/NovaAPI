@@ -86,7 +86,8 @@ public final class ChunkMeshScheduler {
             } finally {
                 IN_FLIGHT_REBUILDS.decrementAndGet();
             }
-            enqueueUpload(() -> request.uploadWork().accept(result));
+            T finalResult = result;
+            enqueueUpload(() -> request.uploadWork().accept(finalResult));
         });
     }
 

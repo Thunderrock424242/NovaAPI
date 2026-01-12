@@ -5,6 +5,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,18 +16,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class AsyncWorldGenHandler {
 
     // Executor service to handle asynchronous tasks
-    private static final ExecutorService worldGenExecutor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors());
+    private static final ExecutorService worldGenExecutor = Executors.newSingleThreadExecutor();
 
     // Queue to ensure thread-safe operations
     private static final LinkedBlockingQueue<Runnable> mainThreadTasks = new LinkedBlockingQueue<>();
+    private static final int MAX_MAIN_THREAD_TASKS_PER_TICK = 8;
 
     @SubscribeEvent
     public static void onWorldLoad(LevelEvent.Load event) {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
 
+        if (hasInitializedWorld(level)) {
+            return;
+        }
+
         CompletableFuture.runAsync(() -> generateChunksAsync(level), worldGenExecutor)
-                .thenRun(() -> scheduleMainThreadTask(() -> finalizeGeneration(level)));
+                .thenRun(() -> scheduleMainThreadTask(() -> {
+                    markWorldInitialized(level);
+                    finalizeGeneration(level);
+                }));
     }
 
     private static void generateChunksAsync(ServerLevel level) {
@@ -39,12 +49,7 @@ public class AsyncWorldGenHandler {
     }
 
     private static void performHeavyGeneration(int chunkX, int chunkZ, ServerLevel level) {
-        // Simulate heavy computational tasks
-        try {
-            Thread.sleep(10); // placeholder for heavy task
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        scheduleMainThreadTask(() -> level.getChunk(chunkX, chunkZ));
     }
 
     private static void finalizeGeneration(ServerLevel level) {
@@ -53,11 +58,35 @@ public class AsyncWorldGenHandler {
                 net.minecraft.network.chat.Component.literal("Async World Generation Complete!")));
     }
 
+    private static boolean hasInitializedWorld(ServerLevel level) {
+        return Files.exists(getInitializationMarkerPath(level));
+    }
+
+    private static void markWorldInitialized(ServerLevel level) {
+        Path markerPath = getInitializationMarkerPath(level);
+        try {
+            Files.createDirectories(markerPath.getParent());
+            if (!Files.exists(markerPath)) {
+                Files.createFile(markerPath);
+            }
+        } catch (IOException e) {
+            System.out.println("[Nova API] Failed to write world initialization marker: " + e.getMessage());
+        }
+    }
+
+    private static Path getInitializationMarkerPath(ServerLevel level) {
+        return level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)
+                .resolve("novaapi")
+                .resolve("async_worldgen.marker");
+    }
+
     // Called from tick event or similar main-thread context
     public static void executeMainThreadTasks() {
         Runnable task;
-        while ((task = mainThreadTasks.poll()) != null) {
+        int processed = 0;
+        while (processed < MAX_MAIN_THREAD_TASKS_PER_TICK && (task = mainThreadTasks.poll()) != null) {
             task.run();
+            processed++;
         }
     }
 

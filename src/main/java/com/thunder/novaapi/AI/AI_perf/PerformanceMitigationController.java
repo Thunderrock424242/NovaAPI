@@ -1,6 +1,7 @@
 package com.thunder.novaapi.AI.AI_perf;
 
 import com.thunder.novaapi.Core.NovaAPI;
+import com.thunder.novaapi.config.PerformanceMitigationConfig;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class PerformanceMitigationController {
     private static final int DEFAULT_DURATION_SECONDS = 30;
     private static final int MIN_SIM_DISTANCE = 2;
+    private static final int MIN_VIEW_DISTANCE = 2;
     private static final int MIN_SEVERITY_FOR_ACTION = 2;
     private static final int PENDING_TTL_SECONDS = 120;
 
@@ -34,6 +36,10 @@ public final class PerformanceMitigationController {
     private static volatile int chunkDistanceDrop = 0;
     private static volatile long chunkDistanceUntil = 0L;
     private static volatile Integer originalSimulationDistance = null;
+    private static volatile int renderViewDrop = 0;
+    private static volatile int renderEntityDrop = 0;
+    private static volatile long renderDistanceUntil = 0L;
+    private static volatile Integer originalViewDistance = null;
 
     private static final ConcurrentHashMap<UUID, Boolean> frozenEntities = new ConcurrentHashMap<>();
 
@@ -48,6 +54,7 @@ public final class PerformanceMitigationController {
         List<PerformanceAction> proposals = new ArrayList<>();
         List<PerformanceAction> rollbackProposals = new ArrayList<>();
         List<PerformanceAdvisoryRequest.SubsystemLoad> loads = request.subsystemLoads();
+        PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.values();
         for (PerformanceAdvisoryRequest.SubsystemLoad load : loads) {
             if (load.observedValue() < MIN_SEVERITY_FOR_ACTION) {
                 continue;
@@ -81,6 +88,19 @@ public final class PerformanceMitigationController {
                         load.evidence(),
                         DEFAULT_DURATION_SECONDS,
                         (int) load.observedValue()));
+                case "render-distance" -> {
+                    if (config.renderDistanceEnabled()
+                            && (config.renderDistanceViewDrop() > 0 || config.renderDistanceEntityDrop() > 0)) {
+                        proposals.add(new PerformanceAction(
+                                ID_GENERATOR.nextBaseId(),
+                                subsystem,
+                                "Reduce view distance by " + config.renderDistanceViewDrop()
+                                        + " and entity distance by " + config.renderDistanceEntityDrop() + " chunks.",
+                                load.evidence(),
+                                DEFAULT_DURATION_SECONDS,
+                                (int) load.observedValue()));
+                    }
+                }
                 default -> {
                 }
             }
@@ -123,6 +143,14 @@ public final class PerformanceMitigationController {
             case "entity-pathfinding" -> applyPathfindingThrottle(server, 3, action.getDurationSeconds());
             case "entity-ticking" -> applyEntityTickThrottle(server, 3, action.getDurationSeconds());
             case "chunk-processing" -> applyChunkMitigation(server, 1, action.getDurationSeconds());
+            case "render-distance" -> {
+                PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.values();
+                applyRenderDistanceMitigation(
+                        server,
+                        config.renderDistanceViewDrop(),
+                        config.renderDistanceEntityDrop(),
+                        action.getDurationSeconds());
+            }
             default -> {
                 NovaAPI.LOGGER.warn("Unknown subsystem {} in performance action {}", action.getSubsystem(), action.getId());
                 return;
@@ -144,8 +172,13 @@ public final class PerformanceMitigationController {
             expired.addAll(expireMatching("entity-ticking"));
         }
         if (chunkDistanceDrop > 0 && gameTime > chunkDistanceUntil) {
-            rollbackChunkMitigation(server);
+            chunkDistanceDrop = 0;
+            updateSimulationDistance(server);
             expired.addAll(expireMatching("chunk-processing"));
+        }
+        if ((renderViewDrop > 0 || renderEntityDrop > 0) && gameTime > renderDistanceUntil) {
+            rollbackRenderDistance(server);
+            expired.addAll(expireMatching("render-distance"));
         }
 
         List<PerformanceAction> stalePending = ACTION_QUEUE
@@ -168,8 +201,13 @@ public final class PerformanceMitigationController {
                 entityTickUntil = 0L;
             }
             case "chunk-processing" -> {
-                rollbackChunkMitigation(server);
+                chunkDistanceDrop = 0;
+                updateSimulationDistance(server);
                 chunkDistanceUntil = 0L;
+            }
+            case "render-distance" -> {
+                rollbackRenderDistance(server);
+                renderDistanceUntil = 0L;
             }
             default -> NovaAPI.LOGGER.warn("Unknown rollback subsystem {} for action {}", action.getSubsystem(), action.getId());
         }
@@ -223,23 +261,62 @@ public final class PerformanceMitigationController {
         int desiredDrop = Math.max(0, dropBy);
         if (desiredDrop == 0) return;
 
-        if (originalSimulationDistance == null) {
-            originalSimulationDistance = server.getPlayerList().getSimulationDistance();
-        }
-        int newDistance = Math.max(MIN_SIM_DISTANCE, originalSimulationDistance - desiredDrop);
-        if (newDistance < server.getPlayerList().getSimulationDistance()) {
-            server.getPlayerList().setSimulationDistance(newDistance);
-        }
         chunkDistanceDrop = desiredDrop;
+        updateSimulationDistance(server);
         chunkDistanceUntil = server.overworld().getGameTime() + durationSeconds * 20L;
     }
 
-    private static void rollbackChunkMitigation(MinecraftServer server) {
-        if (originalSimulationDistance != null) {
-            server.getPlayerList().setSimulationDistance(originalSimulationDistance);
+    private static void applyRenderDistanceMitigation(MinecraftServer server, int viewDrop, int entityDrop, int durationSeconds) {
+        if (viewDrop <= 0 && entityDrop <= 0) {
+            return;
         }
-        originalSimulationDistance = null;
-        chunkDistanceDrop = 0;
+        renderViewDrop = Math.max(0, viewDrop);
+        renderEntityDrop = Math.max(0, entityDrop);
+        updateViewDistance(server);
+        updateSimulationDistance(server);
+        renderDistanceUntil = server.overworld().getGameTime() + durationSeconds * 20L;
+    }
+
+    private static void rollbackRenderDistance(MinecraftServer server) {
+        renderViewDrop = 0;
+        renderEntityDrop = 0;
+        updateViewDistance(server);
+        updateSimulationDistance(server);
+    }
+
+    private static void updateSimulationDistance(MinecraftServer server) {
+        int maxDrop = Math.max(chunkDistanceDrop, renderEntityDrop);
+        if (maxDrop <= 0) {
+            if (originalSimulationDistance != null) {
+                server.getPlayerList().setSimulationDistance(originalSimulationDistance);
+            }
+            originalSimulationDistance = null;
+            return;
+        }
+        if (originalSimulationDistance == null) {
+            originalSimulationDistance = server.getPlayerList().getSimulationDistance();
+        }
+        int newDistance = Math.max(MIN_SIM_DISTANCE, originalSimulationDistance - maxDrop);
+        if (server.getPlayerList().getSimulationDistance() != newDistance) {
+            server.getPlayerList().setSimulationDistance(newDistance);
+        }
+    }
+
+    private static void updateViewDistance(MinecraftServer server) {
+        if (renderViewDrop <= 0) {
+            if (originalViewDistance != null) {
+                server.getPlayerList().setViewDistance(originalViewDistance);
+            }
+            originalViewDistance = null;
+            return;
+        }
+        if (originalViewDistance == null) {
+            originalViewDistance = server.getPlayerList().getViewDistance();
+        }
+        int newDistance = Math.max(MIN_VIEW_DISTANCE, originalViewDistance - renderViewDrop);
+        if (server.getPlayerList().getViewDistance() != newDistance) {
+            server.getPlayerList().setViewDistance(newDistance);
+        }
     }
 
     private static List<String> expireMatching(String subsystem) {
@@ -261,6 +338,7 @@ public final class PerformanceMitigationController {
             case "entity-pathfinding" -> "entity-pathfinding";
             case "entity-behavior" -> "entity-ticking";
             case "chunk-processing" -> "chunk-processing";
+            case "render-distance" -> "render-distance";
             default -> null;
         };
     }

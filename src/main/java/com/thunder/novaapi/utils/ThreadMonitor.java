@@ -24,7 +24,12 @@ public class ThreadMonitor {
                 try {
                     Thread.sleep(CHECK_INTERVAL_MS);
                 } catch (InterruptedException e) {
-                    NovaAPI.LOGGER.warn("Thread monitor interrupted", e);
+                    if (!running) {
+                        NovaAPI.LOGGER.info("Thread monitor interrupted during shutdown (expected).");
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    NovaAPI.LOGGER.warn("Thread monitor interrupted unexpectedly", e);
                 }
             }
         }, "Nova-ThreadMonitor");

@@ -14,6 +14,9 @@ public class NovaAPIConfig {
     public static final ModConfigSpec.BooleanValue ASYNC_CHUNK_LOADING;
     public static final ModConfigSpec.BooleanValue SMART_CHUNK_RETENTION;
 
+    // 🔹 Render Culling Settings
+    public static final ModConfigSpec.BooleanValue ENABLE_OCCLUSION_CULLING;
+
     static {
         BUILDER.push("General Settings");
         ENABLE_NOVA_API = BUILDER
@@ -31,6 +34,12 @@ public class NovaAPIConfig {
         SMART_CHUNK_RETENTION = BUILDER
                 .comment("Keep frequently accessed chunks loaded for longer to prevent constant reloads.")
                 .define("smartChunkRetention", true);
+        BUILDER.pop();
+
+        BUILDER.push("Render Culling Settings");
+        ENABLE_OCCLUSION_CULLING = BUILDER
+                .comment("Enable occlusion culling for entity instanced rendering. Disable if compatibility issues arise.")
+                .define("enableOcclusionCulling", true);
         BUILDER.pop();
 
         CONFIG = BUILDER.build();

@@ -37,6 +37,8 @@ public final class ChunkStreamingConfig {
     public static final ModConfigSpec.IntValue DELTA_CHANGE_BUDGET;
     public static final ModConfigSpec.IntValue LIGHT_COMPRESSION_LEVEL;
     public static final ModConfigSpec.IntValue WRITE_FLUSH_INTERVAL_TICKS;
+    public static final ModConfigSpec.IntValue MAX_MESH_REBUILDS_PER_TICK;
+    public static final ModConfigSpec.IntValue MESH_UPLOAD_BATCH_SIZE;
     public static final ModConfigSpec.ConfigValue<String> CACHE_FOLDER_NAME;
     public static final ModConfigSpec.BooleanValue STORE_CACHE_IN_WORLD_CONFIG;
 
@@ -100,6 +102,10 @@ public final class ChunkStreamingConfig {
                 .defineInRange("lightCompressionLevel", 6, 1, 9);
         WRITE_FLUSH_INTERVAL_TICKS = BUILDER.comment("Interval (in ticks) to batch dirty chunk writes using the scheduled flush task.")
                 .defineInRange("writeFlushIntervalTicks", 20, 1, 200);
+        MAX_MESH_REBUILDS_PER_TICK = BUILDER.comment("Maximum chunk mesh rebuilds to start per tick.")
+                .defineInRange("maxMeshRebuildsPerTick", 4, 0, 64);
+        MESH_UPLOAD_BATCH_SIZE = BUILDER.comment("Maximum chunk mesh upload tasks to dispatch to the render thread per tick.")
+                .defineInRange("meshUploadBatchSize", 16, 0, 256);
         CACHE_FOLDER_NAME = BUILDER.comment("Folder name used for chunk cache storage.")
                 .define("cacheFolderName", "chunk-cache");
         STORE_CACHE_IN_WORLD_CONFIG = BUILDER.comment("If true, chunk cache data is stored under the world-specific config folder instead of the global config directory.")
@@ -143,6 +149,8 @@ public final class ChunkStreamingConfig {
                     DELTA_CHANGE_BUDGET.get(),
                     LIGHT_COMPRESSION_LEVEL.get(),
                     WRITE_FLUSH_INTERVAL_TICKS.get(),
+                    MAX_MESH_REBUILDS_PER_TICK.get(),
+                    MESH_UPLOAD_BATCH_SIZE.get(),
                     CACHE_FOLDER_NAME.get(),
                     STORE_CACHE_IN_WORLD_CONFIG.get()
             );
@@ -184,6 +192,8 @@ public final class ChunkStreamingConfig {
                 DELTA_CHANGE_BUDGET.getDefault(),
                 LIGHT_COMPRESSION_LEVEL.getDefault(),
                 WRITE_FLUSH_INTERVAL_TICKS.getDefault(),
+                MAX_MESH_REBUILDS_PER_TICK.getDefault(),
+                MESH_UPLOAD_BATCH_SIZE.getDefault(),
                 CACHE_FOLDER_NAME.getDefault(),
                 STORE_CACHE_IN_WORLD_CONFIG.getDefault()
         );
@@ -218,6 +228,8 @@ public final class ChunkStreamingConfig {
             int deltaChangeBudget,
             int lightCompressionLevel,
             int writeFlushIntervalTicks,
+            int maxMeshRebuildsPerTick,
+            int meshUploadBatchSize,
             String cacheFolderName,
             boolean storeCacheInWorldConfig
     ) {
@@ -260,6 +272,8 @@ public final class ChunkStreamingConfig {
                     256,
                     6,
                     20,
+                    4,
+                    16,
                     "chunk-cache",
                     true
             );

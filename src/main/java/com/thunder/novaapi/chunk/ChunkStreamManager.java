@@ -70,6 +70,7 @@ public final class ChunkStreamManager {
         storageAdapter = adapter;
         BufferPool.configure(values);
         ChunkTickThrottler.configure(values);
+        ChunkMeshScheduler.configure(values);
         sliceCache = new ChunkSliceCache(values.sliceInternLimit());
         sliceCache.reset();
         STATE.clear();
@@ -90,6 +91,7 @@ public final class ChunkStreamManager {
         WARM_CACHE_MISSES.set(0L);
         WARM_CACHE.clear();
         HOT_CACHE.clear();
+        ChunkMeshScheduler.shutdown();
         ioController = new ChunkIoController(() -> config, () -> storageAdapter, null);
     }
 
@@ -176,6 +178,7 @@ public final class ChunkStreamManager {
         lastGameTime.set(gameTime);
         expireTickets(gameTime);
         ioController.tick(gameTime);
+        ChunkMeshScheduler.tick();
     }
 
     /**

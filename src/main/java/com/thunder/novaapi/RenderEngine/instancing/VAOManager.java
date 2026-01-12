@@ -39,6 +39,15 @@ public class VAOManager {
     }
 
     /**
+     * Attempts to load a VAO for a LOD-specific model path.
+     * Each LOD level is cached separately per model.
+     */
+    public static int getOrLoadVAO(ResourceLocation baseModelPath, int lod) {
+        ResourceLocation lodPath = ModelRegistryHelper.getLodModelPath(baseModelPath, lod);
+        return getOrLoadVAO(lodPath);
+    }
+
+    /**
      * Tries to load a VAO from the given model file.
      * Replace this stub with actual model parsing logic (OBJ, JSON, etc).
      */
@@ -98,5 +107,13 @@ public class VAOManager {
      */
     public static boolean isModelEnabled(ResourceLocation path) {
         return !disabledModels.getOrDefault(path, false);
+    }
+
+    /**
+     * Checks if instanced rendering is enabled for a LOD-specific model path.
+     */
+    public static boolean isModelEnabled(ResourceLocation baseModelPath, int lod) {
+        ResourceLocation lodPath = ModelRegistryHelper.getLodModelPath(baseModelPath, lod);
+        return isModelEnabled(lodPath);
     }
 }

@@ -4,6 +4,8 @@ package com.thunder.novaapi.RenderEngine;
 import com.thunder.novaapi.Core.NovaAPI;
 import com.thunder.novaapi.RenderEngine.Threading.ModdedRenderInterceptor;
 import com.thunder.novaapi.RenderEngine.instancing.InstancedRenderer;
+import com.thunder.novaapi.RenderEngine.overlay.OverlayBatcher;
+import com.thunder.novaapi.RenderEngine.particles.ParticleCullingManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,6 +23,10 @@ public class ClientModEvents {
     public static void onRenderWorld(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
 
+        ParticleCullingManager.render(
+                event.getFrustum(),
+                Minecraft.getInstance().gameRenderer.getMainCamera().getPosition()
+        );
         InstancedRenderer.renderAll(
                 Minecraft.getInstance().level.entitiesForRendering(),
                 event.getFrustum()
@@ -33,7 +39,7 @@ public class ClientModEvents {
         graphics.pose().pushPose();
         try {
             ModdedRenderInterceptor.executeModRender(() -> {
-                // Run actual GUI drawing here using graphics
+                OverlayBatcher.render(graphics);
             });
         } catch (Exception e) {
             NovaAPI.LOGGER.error("RenderInterceptor threw during overlay rendering", e);

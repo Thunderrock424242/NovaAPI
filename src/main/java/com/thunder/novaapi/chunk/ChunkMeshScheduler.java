@@ -19,6 +19,8 @@ public final class ChunkMeshScheduler {
     private static final ConcurrentLinkedQueue<MeshRebuildRequest<?>> REBUILD_QUEUE = new ConcurrentLinkedQueue<>();
     private static final ConcurrentLinkedQueue<Runnable> UPLOAD_QUEUE = new ConcurrentLinkedQueue<>();
     private static final AtomicInteger IN_FLIGHT_REBUILDS = new AtomicInteger();
+    private static final AtomicInteger PENDING_REBUILDS = new AtomicInteger();
+    private static final AtomicInteger PENDING_UPLOADS = new AtomicInteger();
     private static ChunkStreamingConfig.ChunkConfigValues config = ChunkStreamingConfig.values();
 
     private ChunkMeshScheduler() {
@@ -32,6 +34,8 @@ public final class ChunkMeshScheduler {
         REBUILD_QUEUE.clear();
         UPLOAD_QUEUE.clear();
         IN_FLIGHT_REBUILDS.set(0);
+        PENDING_REBUILDS.set(0);
+        PENDING_UPLOADS.set(0);
     }
 
     public static <T> void enqueue(ResourceKey<Level> dimension,
@@ -42,7 +46,12 @@ public final class ChunkMeshScheduler {
         Objects.requireNonNull(pos, "pos");
         Objects.requireNonNull(rebuildWork, "rebuildWork");
         Objects.requireNonNull(uploadWork, "uploadWork");
+        int maxPendingRebuilds = config.maxPendingMeshRebuilds();
+        if (maxPendingRebuilds > 0 && PENDING_REBUILDS.get() >= maxPendingRebuilds) {
+            return;
+        }
         REBUILD_QUEUE.add(new MeshRebuildRequest<>(dimension, pos, rebuildWork, uploadWork));
+        PENDING_REBUILDS.incrementAndGet();
     }
 
     public static void tick() {
@@ -52,6 +61,7 @@ public final class ChunkMeshScheduler {
             if (request == null) {
                 break;
             }
+            PENDING_REBUILDS.decrementAndGet();
             dispatchRebuild(request);
         }
 
@@ -61,6 +71,7 @@ public final class ChunkMeshScheduler {
             if (upload == null) {
                 break;
             }
+            PENDING_UPLOADS.decrementAndGet();
             RenderThreadManager.executeRenderTask(upload);
         }
     }
@@ -70,11 +81,11 @@ public final class ChunkMeshScheduler {
     }
 
     public static int pendingRebuilds() {
-        return REBUILD_QUEUE.size();
+        return PENDING_REBUILDS.get();
     }
 
     public static int pendingUploads() {
-        return UPLOAD_QUEUE.size();
+        return PENDING_UPLOADS.get();
     }
 
     private static <T> void dispatchRebuild(MeshRebuildRequest<T> request) {
@@ -93,7 +104,12 @@ public final class ChunkMeshScheduler {
 
     private static void enqueueUpload(Runnable uploadTask) {
         if (uploadTask != null) {
+            int maxPendingUploads = config.maxPendingMeshUploads();
+            if (maxPendingUploads > 0 && PENDING_UPLOADS.get() >= maxPendingUploads) {
+                return;
+            }
             UPLOAD_QUEUE.add(uploadTask);
+            PENDING_UPLOADS.incrementAndGet();
         }
     }
 

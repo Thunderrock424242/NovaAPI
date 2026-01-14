@@ -4,23 +4,40 @@ import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.minecraft.world.level.ChunkPos;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AsyncWorldGenHandler {
 
     // Executor service to handle asynchronous tasks
-    private static final ExecutorService worldGenExecutor = Executors.newSingleThreadExecutor();
+    private static final int ASYNC_WORKER_COUNT = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+    private static final ExecutorService worldGenExecutor = Executors.newFixedThreadPool(ASYNC_WORKER_COUNT, new ThreadFactory() {
+        private final AtomicInteger index = new AtomicInteger(1);
+
+        @Override
+        public Thread newThread(Runnable task) {
+            Thread thread = new Thread(task, "novaapi-worldgen-" + index.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     // Queue to ensure thread-safe operations
-    private static final LinkedBlockingQueue<Runnable> mainThreadTasks = new LinkedBlockingQueue<>();
-    private static final int MAX_MAIN_THREAD_TASKS_PER_TICK = 8;
+    private static final LinkedBlockingQueue<ChunkLoadRequest> mainThreadTasks = new LinkedBlockingQueue<>();
+    private static final LinkedBlockingQueue<Runnable> mainThreadRunnables = new LinkedBlockingQueue<>();
+    private static final int BASE_MAIN_THREAD_TASKS_PER_TICK = 8;
+    private static final int MAX_MAIN_THREAD_TASKS_PER_TICK = 48;
+    private static final int MAX_MAIN_THREAD_RUNNABLES_PER_TICK = 4;
 
     @SubscribeEvent
     public static void onWorldLoad(LevelEvent.Load event) {
@@ -49,7 +66,7 @@ public class AsyncWorldGenHandler {
     }
 
     private static void performHeavyGeneration(int chunkX, int chunkZ, ServerLevel level) {
-        scheduleMainThreadTask(() -> level.getChunk(chunkX, chunkZ));
+        scheduleMainThreadChunkLoad(level, new ChunkPos(chunkX, chunkZ));
     }
 
     private static void finalizeGeneration(ServerLevel level) {
@@ -82,16 +99,34 @@ public class AsyncWorldGenHandler {
 
     // Called from tick event or similar main-thread context
     public static void executeMainThreadTasks() {
-        Runnable task;
         int processed = 0;
-        while (processed < MAX_MAIN_THREAD_TASKS_PER_TICK && (task = mainThreadTasks.poll()) != null) {
-            task.run();
+        int queueDepth = mainThreadTasks.size();
+        int budget = Math.min(MAX_MAIN_THREAD_TASKS_PER_TICK,
+                BASE_MAIN_THREAD_TASKS_PER_TICK + Math.max(0, queueDepth / 16));
+        ChunkLoadRequest request;
+        while (processed < budget && (request = mainThreadTasks.poll()) != null) {
+            request.level().getChunk(request.pos().x, request.pos().z);
             processed++;
+        }
+
+        int runnableProcessed = 0;
+        Runnable runnable;
+        while (runnableProcessed < MAX_MAIN_THREAD_RUNNABLES_PER_TICK
+                && (runnable = mainThreadRunnables.poll()) != null) {
+            runnable.run();
+            runnableProcessed++;
         }
     }
 
+    private static void scheduleMainThreadChunkLoad(ServerLevel level, ChunkPos pos) {
+        mainThreadTasks.offer(new ChunkLoadRequest(level, pos));
+    }
+
     private static void scheduleMainThreadTask(Runnable task) {
-        mainThreadTasks.offer(task);
+        mainThreadRunnables.offer(task);
+    }
+
+    private record ChunkLoadRequest(ServerLevel level, ChunkPos pos) {
     }
 
     // Shutdown executor service when server closes

@@ -217,7 +217,7 @@ public class NovaAPI {
         if (asyncInitialized) {
             AsyncTaskManager.shutdown();
         }
-        AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+        AsyncTaskManager.initialize(resolveAsyncConfig());
         asyncInitialized = true;
     }
 
@@ -225,7 +225,7 @@ public class NovaAPI {
         if (!chunkStreamingInitialized || chunkStorageRoot == null) {
             return;
         }
-        ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
+        ChunkStreamingConfig.ChunkConfigValues chunkConfig = resolveChunkConfig();
         ChunkStreamManager.shutdown();
         IoExecutors.shutdown();
         BufferPool.configure(chunkConfig);
@@ -236,15 +236,90 @@ public class NovaAPI {
     }
 
     private void initializeAsyncAndChunkSystems(MinecraftServer server) {
-        AsyncTaskManager.initialize(AsyncThreadingConfig.values());
+        AsyncTaskManager.initialize(resolveAsyncConfig());
         asyncInitialized = true;
-        ChunkStreamingConfig.ChunkConfigValues chunkConfig = ChunkStreamingConfig.values();
+        ChunkStreamingConfig.ChunkConfigValues chunkConfig = resolveChunkConfig();
         BufferPool.configure(chunkConfig);
         IoExecutors.initialize(chunkConfig);
         chunkStorageRoot = ChunkStoragePaths.resolveCacheRoot(server, chunkConfig);
         ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
         ChunkDeltaTracker.configure(chunkConfig);
         chunkStreamingInitialized = true;
+    }
+
+    private static AsyncThreadingConfig.AsyncConfigValues resolveAsyncConfig() {
+        AsyncThreadingConfig.AsyncConfigValues base = AsyncThreadingConfig.values();
+        if (!NovaAPIConfig.MODPACK_RESOURCE_PROFILE.get()) {
+            return base;
+        }
+        int hardwareThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
+        int maxThreads = Math.max(1, Math.min(base.maxThreads(), Math.max(1, hardwareThreads / 3)));
+        int queueSize = Math.min(base.queueSize(), 128);
+        int applyPerTick = Math.min(base.applyPerTick(), 32);
+        int taskTimeoutMs = base.taskTimeoutMs();
+        return new AsyncThreadingConfig.AsyncConfigValues(
+                base.enabled(),
+                maxThreads,
+                queueSize,
+                applyPerTick,
+                taskTimeoutMs,
+                base.debugLogging()
+        );
+    }
+
+    private static ChunkStreamingConfig.ChunkConfigValues resolveChunkConfig() {
+        ChunkStreamingConfig.ChunkConfigValues base = ChunkStreamingConfig.values();
+        if (!NovaAPIConfig.MODPACK_RESOURCE_PROFILE.get()) {
+            return base;
+        }
+        int hardwareThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
+        int ioThreads = Math.max(1, Math.min(base.ioThreads(), Math.max(1, hardwareThreads / 6)));
+        int hotCacheLimit = Math.min(base.hotCacheLimit(), 96);
+        int warmCacheLimit = Math.min(base.warmCacheLimit(), 192);
+        int maxParallelIo = Math.min(base.maxParallelIo(), 2);
+        int ioQueueSize = Math.min(base.ioQueueSize(), 96);
+        int bufferSlicesPerThread = Math.min(base.bufferSlicesPerThread(), 4);
+        int maxMeshRebuildsPerTick = Math.min(base.maxMeshRebuildsPerTick(), 2);
+        int meshUploadBatchSize = Math.min(base.meshUploadBatchSize(), 8);
+        int maxPendingMeshRebuilds = base.maxPendingMeshRebuilds() == 0 ? 0 : Math.min(base.maxPendingMeshRebuilds(), 1024);
+        int maxPendingMeshUploads = base.maxPendingMeshUploads() == 0 ? 0 : Math.min(base.maxPendingMeshUploads(), 2048);
+
+        return new ChunkStreamingConfig.ChunkConfigValues(
+                base.enabled(),
+                hotCacheLimit,
+                warmCacheLimit,
+                base.splitWarmCache(),
+                base.saveDebounceTicks(),
+                base.playerTicketTtl(),
+                base.entityTicketTtl(),
+                base.redstoneTicketTtl(),
+                base.structureTicketTtl(),
+                maxParallelIo,
+                base.compressionLevel(),
+                base.compressionCodec(),
+                base.perDimensionExecutors(),
+                ioThreads,
+                ioQueueSize,
+                base.bufferSliceBytes(),
+                bufferSlicesPerThread,
+                base.skipWarmCacheTicking(),
+                base.fluidRedstoneThrottleRadius(),
+                base.fluidRedstoneThrottleInterval(),
+                base.randomTickMinScale(),
+                base.randomTickMaxScale(),
+                base.movementSpeedForMaxScale(),
+                base.randomTickPlayerBand(),
+                base.sliceInternLimit(),
+                base.deltaChangeBudget(),
+                base.lightCompressionLevel(),
+                base.writeFlushIntervalTicks(),
+                maxMeshRebuildsPerTick,
+                meshUploadBatchSize,
+                maxPendingMeshRebuilds,
+                maxPendingMeshUploads,
+                base.cacheFolderName(),
+                base.storeCacheInWorldConfig()
+        );
     }
 
     public void onConfigLoaded(ModConfigEvent.Loading event) {

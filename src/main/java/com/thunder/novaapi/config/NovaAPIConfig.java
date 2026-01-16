@@ -8,6 +8,7 @@ public class NovaAPIConfig {
 
     // 🔹 General Settings
     public static final ModConfigSpec.BooleanValue ENABLE_NOVA_API;
+    public static final ModConfigSpec.BooleanValue MODPACK_RESOURCE_PROFILE;
 
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
@@ -22,6 +23,9 @@ public class NovaAPIConfig {
         ENABLE_NOVA_API = BUILDER
                 .comment("Enable Nova API. If false, all features are disabled.")
                 .define("enableNovaAPI", true);
+        MODPACK_RESOURCE_PROFILE = BUILDER
+                .comment("Enable modpack-friendly tuning to lower CPU and memory usage (auto-adjusts Nova API internal limits).")
+                .define("modpackResourceProfile", false);
         BUILDER.pop();
 
         BUILDER.push("Chunk Optimization Settings");

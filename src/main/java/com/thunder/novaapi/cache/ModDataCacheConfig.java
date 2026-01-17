@@ -1,5 +1,6 @@
 package com.thunder.novaapi.cache;
 
+import com.thunder.novaapi.config.NovaAPIConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.time.Duration;
@@ -45,6 +46,21 @@ public final class ModDataCacheConfig {
     }
 
     /**
+     * Returns the effective maximum cache size in bytes after modpack tuning.
+     */
+    public static long getEffectiveMaxCacheSizeBytes() {
+        long baseLimit = getMaxCacheSizeBytes();
+        if (!NovaAPIConfig.isModpackProfileEnabled()) {
+            return baseLimit;
+        }
+        long modpackCap = 256L * 1024L * 1024L;
+        if (baseLimit <= 0) {
+            return modpackCap;
+        }
+        return Math.min(baseLimit, modpackCap);
+    }
+
+    /**
      * Returns the configured maximum age for cache entries.
      */
     public static Duration getMaxEntryAge() {
@@ -53,6 +69,21 @@ public final class ModDataCacheConfig {
             return Duration.ZERO;
         }
         return Duration.ofHours(hours);
+    }
+
+    /**
+     * Returns the effective maximum cache entry age after modpack tuning.
+     */
+    public static Duration getEffectiveMaxEntryAge() {
+        Duration baseAge = getMaxEntryAge();
+        if (!NovaAPIConfig.isModpackProfileEnabled()) {
+            return baseAge;
+        }
+        Duration modpackAge = Duration.ofHours(72);
+        if (baseAge.isZero() || baseAge.isNegative()) {
+            return modpackAge;
+        }
+        return baseAge.compareTo(modpackAge) > 0 ? modpackAge : baseAge;
     }
 
     /**

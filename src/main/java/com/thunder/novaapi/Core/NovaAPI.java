@@ -249,7 +249,7 @@ public class NovaAPI {
 
     private static AsyncThreadingConfig.AsyncConfigValues resolveAsyncConfig() {
         AsyncThreadingConfig.AsyncConfigValues base = AsyncThreadingConfig.values();
-        if (!NovaAPIConfig.MODPACK_RESOURCE_PROFILE.get()) {
+        if (!NovaAPIConfig.isModpackProfileEnabled()) {
             return base;
         }
         int hardwareThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
@@ -269,7 +269,7 @@ public class NovaAPI {
 
     private static ChunkStreamingConfig.ChunkConfigValues resolveChunkConfig() {
         ChunkStreamingConfig.ChunkConfigValues base = ChunkStreamingConfig.values();
-        if (!NovaAPIConfig.MODPACK_RESOURCE_PROFILE.get()) {
+        if (!NovaAPIConfig.isModpackProfileEnabled()) {
             return base;
         }
         int hardwareThreads = Math.max(1, Runtime.getRuntime().availableProcessors());

@@ -55,6 +55,22 @@ public final class PerformanceMitigationConfig {
         }
     }
 
+    public static PerformanceMitigationValues effectiveValues() {
+        PerformanceMitigationValues base = values();
+        if (!NovaAPIConfig.isModpackProfileEnabled()) {
+            return base;
+        }
+        int fpsThreshold = Math.min(base.renderDistanceFpsThresholdMs(), 50);
+        double queueThreshold = Math.min(base.renderDistanceQueuePressureThreshold(), 0.75D);
+        return new PerformanceMitigationValues(
+                base.renderDistanceEnabled(),
+                fpsThreshold,
+                queueThreshold,
+                base.renderDistanceViewDrop(),
+                base.renderDistanceEntityDrop()
+        );
+    }
+
     public static PerformanceMitigationValues defaultValues() {
         return new PerformanceMitigationValues(
                 ENABLE_RENDER_DISTANCE_MITIGATION.getDefault(),

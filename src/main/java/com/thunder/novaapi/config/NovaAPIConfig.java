@@ -48,4 +48,12 @@ public class NovaAPIConfig {
 
         CONFIG = BUILDER.build();
     }
+
+    public static boolean isModpackProfileEnabled() {
+        try {
+            return MODPACK_RESOURCE_PROFILE.get();
+        } catch (IllegalStateException ex) {
+            return MODPACK_RESOURCE_PROFILE.getDefault();
+        }
+    }
 }

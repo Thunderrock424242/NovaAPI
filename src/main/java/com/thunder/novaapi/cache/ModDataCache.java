@@ -252,7 +252,7 @@ public final class ModDataCache {
         LOCK.readLock().lock();
         try {
             long totalSize = ENTRIES.values().stream().mapToLong(CacheEntry::size).sum();
-            return new CacheStats(ENTRIES.size(), totalSize, ModDataCacheConfig.getMaxCacheSizeBytes(), cacheEnabled,
+            return new CacheStats(ENTRIES.size(), totalSize, ModDataCacheConfig.getEffectiveMaxCacheSizeBytes(), cacheEnabled,
                     ImmutableMap.copyOf(ENTRIES));
         } finally {
             LOCK.readLock().unlock();
@@ -309,7 +309,7 @@ public final class ModDataCache {
     }
 
     private static void pruneExpiredEntries() {
-        Duration maxAge = ModDataCacheConfig.getMaxEntryAge();
+        Duration maxAge = ModDataCacheConfig.getEffectiveMaxEntryAge();
         if (maxAge.isZero() || maxAge.isNegative()) {
             return;
         }
@@ -330,7 +330,7 @@ public final class ModDataCache {
     }
 
     private static void enforceSizeLimit() {
-        long limit = ModDataCacheConfig.getMaxCacheSizeBytes();
+        long limit = ModDataCacheConfig.getEffectiveMaxCacheSizeBytes();
         if (limit <= 0) {
             return;
         }

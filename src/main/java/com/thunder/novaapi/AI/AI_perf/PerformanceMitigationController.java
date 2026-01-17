@@ -54,7 +54,7 @@ public final class PerformanceMitigationController {
         List<PerformanceAction> proposals = new ArrayList<>();
         List<PerformanceAction> rollbackProposals = new ArrayList<>();
         List<PerformanceAdvisoryRequest.SubsystemLoad> loads = request.subsystemLoads();
-        PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.values();
+        PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.effectiveValues();
         for (PerformanceAdvisoryRequest.SubsystemLoad load : loads) {
             if (load.observedValue() < MIN_SEVERITY_FOR_ACTION) {
                 continue;
@@ -144,7 +144,7 @@ public final class PerformanceMitigationController {
             case "entity-ticking" -> applyEntityTickThrottle(server, 3, action.getDurationSeconds());
             case "chunk-processing" -> applyChunkMitigation(server, 1, action.getDurationSeconds());
             case "render-distance" -> {
-                PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.values();
+                PerformanceMitigationConfig.PerformanceMitigationValues config = PerformanceMitigationConfig.effectiveValues();
                 applyRenderDistanceMitigation(
                         server,
                         config.renderDistanceViewDrop(),

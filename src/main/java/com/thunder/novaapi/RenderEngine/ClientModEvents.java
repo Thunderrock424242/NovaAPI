@@ -10,6 +10,7 @@ import com.thunder.novaapi.RenderEngine.particles.ParticleCullingManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.Entity;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
@@ -20,7 +21,7 @@ import java.util.List;
 import static com.thunder.novaapi.Core.NovaAPI.MOD_ID;
 
 
-@EventBusSubscriber(modid = MOD_ID)
+@EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
 public class ClientModEvents {
 
     @SubscribeEvent

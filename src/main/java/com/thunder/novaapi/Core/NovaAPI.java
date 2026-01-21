@@ -25,6 +25,7 @@ import com.thunder.novaapi.config.PerformanceMitigationConfig;
 import com.thunder.novaapi.RenderEngine.RenderEngineConfig;
 import com.thunder.novaapi.io.BufferPool;
 import com.thunder.novaapi.io.IoExecutors;
+import com.thunder.novaapi.resourcepack.ResourcePackOptimizationConfig;
 import com.thunder.novaapi.task.BackgroundTaskScheduler;
 import com.thunder.novaapi.utils.ThreadMonitor;
 import net.minecraft.commands.CommandSourceStack;
@@ -107,6 +108,8 @@ public class NovaAPI {
                 CONFIG_FOLDER + "novaapi-performance-mitigation.toml");
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, RenderEngineConfig.CONFIG_SPEC,
                 CONFIG_FOLDER + "novaapi-rendering.toml");
+        ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ResourcePackOptimizationConfig.CONFIG_SPEC,
+                CONFIG_FOLDER + "novaapi-resourcepacks.toml");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

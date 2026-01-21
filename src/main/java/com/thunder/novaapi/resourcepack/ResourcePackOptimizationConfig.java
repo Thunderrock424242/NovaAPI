@@ -10,6 +10,7 @@ public final class ResourcePackOptimizationConfig {
     public static final ModConfigSpec.BooleanValue enableOptimization;
     public static final ModConfigSpec.BooleanValue allowRemoteDownloads;
     public static final ModConfigSpec.BooleanValue autoEnablePacks;
+    public static final ModConfigSpec.BooleanValue forceCompatible;
     public static final ModConfigSpec.BooleanValue defaultRequired;
     public static final ModConfigSpec.BooleanValue defaultFixedPosition;
     public static final ModConfigSpec.EnumValue<PackPositionPreference> defaultPosition;
@@ -23,6 +24,8 @@ public final class ResourcePackOptimizationConfig {
                 .define("allowRemoteDownloads", true);
         autoEnablePacks = builder.comment("Automatically enable cached packs without user intervention")
                 .define("autoEnablePacks", true);
+        forceCompatible = builder.comment("Force packs to be treated as compatible (suppresses \"incompatible\" warnings)")
+                .define("forceCompatible", false);
         defaultRequired = builder.comment("Require packs by default when manifest entries omit the flag")
                 .define("defaultRequired", false);
         defaultFixedPosition = builder.comment("Fix pack position by default when manifest entries omit the flag")
@@ -47,6 +50,10 @@ public final class ResourcePackOptimizationConfig {
 
     public static boolean isAutoEnablePacks() {
         return autoEnablePacks.get();
+    }
+
+    public static boolean isForceCompatible() {
+        return forceCompatible.get();
     }
 
     public static boolean getDefaultRequired() {

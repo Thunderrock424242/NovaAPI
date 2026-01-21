@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException;
 import com.thunder.novaapi.Core.NovaAPI;
 import com.thunder.novaapi.cache.ModDataCache;
 import com.thunder.novaapi.cache.ModDataCacheConfig;
+import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.FilePackResources;
 import net.minecraft.server.packs.PackLocationInfo;
@@ -12,6 +13,7 @@ import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -169,6 +171,16 @@ public final class ResourcePackManager {
                 ? new PathPackResources.PathResourcesSupplier(path)
                 : new FilePackResources.FileResourcesSupplier(path);
         PackSelectionConfig selectionConfig = new PackSelectionConfig(resolveRequired(entry), resolvePosition(entry), resolveFixedPosition(entry));
+        int packVersion = SharedConstants.getCurrentVersion().getPackVersion(packType);
+        Pack.Metadata metadata = Pack.readPackMetadata(locationInfo, supplier, packVersion);
+        if (metadata == null) {
+            return null;
+        }
+        if (ResourcePackOptimizationConfig.isForceCompatible() && metadata.compatibility() != PackCompatibility.COMPATIBLE) {
+            metadata = new Pack.Metadata(metadata.description(), PackCompatibility.COMPATIBLE, metadata.requestedFeatures(),
+                    metadata.overlays(), metadata.isHidden());
+        }
+        return new Pack(locationInfo, supplier, metadata, selectionConfig);
         return Pack.readMetaAndCreate(locationInfo, supplier, packType, selectionConfig);
     }
 

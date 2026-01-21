@@ -11,21 +11,34 @@ import org.lwjgl.opengl.GL31;
 import java.util.*;
 
 public class InstancedRenderer {
-    private static final double LOD0_MAX_DISTANCE_SQR = 16.0 * 16.0;
-    private static final double LOD1_MAX_DISTANCE_SQR = 48.0 * 48.0;
-
     /**
      * Renders all visible entities using instanced rendering, grouped by model.
      */
     public static void renderAll(Iterable<Entity> entities, Frustum frustum) {
+        if (!com.thunder.novaapi.RenderEngine.RenderEngineConfig.isInstancedRenderingEnabled()) {
+            return;
+        }
+
         Map<ResourceLocation, List<Entity>> batched = new HashMap<>();
         Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        LodThresholds thresholds = resolveLodThresholds(
+                com.thunder.novaapi.RenderEngine.RenderEngineConfig.getInstancedLod0Distance(),
+                com.thunder.novaapi.RenderEngine.RenderEngineConfig.getInstancedLod1Distance()
+        );
 
         for (Entity entity : entities) {
-            if (!frustum.isVisible(entity.getBoundingBox())) continue;
+            if (frustum != null && !frustum.isVisible(entity.getBoundingBox())) {
+                continue;
+            }
 
             ResourceLocation modelPath = ModelRegistryHelper.getModelPath(entity.getType());
-            ResourceLocation lodPath = ModelRegistryHelper.getLodModelPath(modelPath, selectLod(entity, cameraPos));
+            if (modelPath == null || !VAOManager.isModelEnabled(modelPath)) {
+                continue;
+            }
+            ResourceLocation lodPath = ModelRegistryHelper.getLodModelPath(
+                    modelPath,
+                    selectLod(entity, cameraPos, thresholds)
+            );
             batched.computeIfAbsent(lodPath, k -> new ArrayList<>()).add(entity);
         }
 
@@ -43,14 +56,23 @@ public class InstancedRenderer {
         GL30.glBindVertexArray(0); // clean unbind
     }
 
-    private static int selectLod(Entity entity, Vec3 cameraPos) {
+    private static int selectLod(Entity entity, Vec3 cameraPos, LodThresholds thresholds) {
         double distanceSqr = entity.position().distanceToSqr(cameraPos);
-        if (distanceSqr <= LOD0_MAX_DISTANCE_SQR) {
+        if (distanceSqr <= thresholds.lod0MaxDistanceSq()) {
             return 0;
         }
-        if (distanceSqr <= LOD1_MAX_DISTANCE_SQR) {
+        if (distanceSqr <= thresholds.lod1MaxDistanceSq()) {
             return 1;
         }
         return 2;
+    }
+
+    private static LodThresholds resolveLodThresholds(double lod0Distance, double lod1Distance) {
+        double clampedLod0 = Math.max(0.0D, lod0Distance);
+        double clampedLod1 = Math.max(clampedLod0, lod1Distance);
+        return new LodThresholds(clampedLod0 * clampedLod0, clampedLod1 * clampedLod1);
+    }
+
+    private record LodThresholds(double lod0MaxDistanceSq, double lod1MaxDistanceSq) {
     }
 }

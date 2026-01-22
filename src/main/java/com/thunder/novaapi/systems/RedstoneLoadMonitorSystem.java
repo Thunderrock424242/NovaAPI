@@ -29,12 +29,10 @@ public class RedstoneLoadMonitorSystem implements AdaptiveSystem {
             return;
         }
 
-        int levels = server.getAllLevels().size();
-        if (!context.sampleBudget().tryConsume(Math.max(1, levels))) {
-            return;
-        }
-
         for (ServerLevel level : server.getAllLevels()) {
+            if (!context.sampleBudget().tryConsume(1)) {
+                return;
+            }
             ResourceKey<Level> dimension = level.dimension();
             long blockTicks = level.getBlockTicks().count();
             long fluidTicks = level.getFluidTicks().count();

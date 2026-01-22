@@ -1,7 +1,9 @@
 package com.thunder.novaapi.systems;
 
 import com.thunder.novaapi.config.AdaptiveSystemsConfig;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -10,9 +12,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class StructureIndexSystem implements AdaptiveSystem {
     private final Object2ObjectOpenHashMap<ResourceKey<Level>, Long2LongOpenHashMap> loadedChunks = new Object2ObjectOpenHashMap<>();
@@ -78,10 +77,10 @@ public class StructureIndexSystem implements AdaptiveSystem {
                        AdaptiveSystemsConfig.AdaptiveSystemsValues config,
                        long gameTime) {
         long ttl = config.chunkActivityTtlTicks();
-        Iterator<Map.Entry<Long, Long>> iterator = chunkMap.long2LongEntrySet().iterator();
+        ObjectIterator<Long2LongMap.Entry> iterator = chunkMap.long2LongEntrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<Long, Long> entry = iterator.next();
-            if (gameTime - entry.getValue() > ttl) {
+            Long2LongMap.Entry entry = iterator.next();
+            if (gameTime - entry.getLongValue() > ttl) {
                 iterator.remove();
             }
         }

@@ -1,7 +1,9 @@
 package com.thunder.novaapi.systems;
 
 import com.thunder.novaapi.config.AdaptiveSystemsConfig;
+import it.unimi.dsi.fastutil.ints.Int2LongMap;
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
@@ -10,9 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class EntitySleepMonitorSystem implements AdaptiveSystem {
     private static final double SAMPLE_RADIUS = 48.0D;
@@ -56,10 +55,10 @@ public class EntitySleepMonitorSystem implements AdaptiveSystem {
             }
 
             int idle = 0;
-            Iterator<Map.Entry<Integer, Long>> iterator = lastActive.int2LongEntrySet().iterator();
+            ObjectIterator<Int2LongMap.Entry> iterator = lastActive.int2LongEntrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<Integer, Long> entry = iterator.next();
-                if (now - entry.getValue() > context.config().entityIdleTicks()) {
+                Int2LongMap.Entry entry = iterator.next();
+                if (now - entry.getLongValue() > context.config().entityIdleTicks()) {
                     idle++;
                 }
                 if (lastActive.size() > context.config().maxTrackedChunks()) {

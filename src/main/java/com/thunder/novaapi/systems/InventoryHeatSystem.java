@@ -2,7 +2,9 @@ package com.thunder.novaapi.systems;
 
 import com.thunder.novaapi.config.AdaptiveSystemsConfig;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -13,9 +15,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class InventoryHeatSystem implements AdaptiveSystem {
     private final Object2ObjectOpenHashMap<ResourceKey<Level>, Long2IntOpenHashMap> accessCounts = new Object2ObjectOpenHashMap<>();
@@ -75,11 +74,11 @@ public class InventoryHeatSystem implements AdaptiveSystem {
         }
         Long2IntOpenHashMap counts = accessCounts.get(dimension);
         long ttl = config.chunkActivityTtlTicks();
-        Iterator<Map.Entry<Long, Long>> iterator = last.long2LongEntrySet().iterator();
+        ObjectIterator<Long2LongMap.Entry> iterator = last.long2LongEntrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<Long, Long> entry = iterator.next();
-            if (gameTime - entry.getValue() > ttl) {
-                long key = entry.getKey();
+            Long2LongMap.Entry entry = iterator.next();
+            if (gameTime - entry.getLongValue() > ttl) {
+                long key = entry.getLongKey();
                 iterator.remove();
                 if (counts != null) {
                     counts.remove(key);
@@ -92,8 +91,8 @@ public class InventoryHeatSystem implements AdaptiveSystem {
         int toRemove = last.size() - config.maxTrackedChunks();
         iterator = last.long2LongEntrySet().iterator();
         while (iterator.hasNext() && toRemove > 0) {
-            Map.Entry<Long, Long> entry = iterator.next();
-            long key = entry.getKey();
+            Long2LongMap.Entry entry = iterator.next();
+            long key = entry.getLongKey();
             iterator.remove();
             if (counts != null) {
                 counts.remove(key);

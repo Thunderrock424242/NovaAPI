@@ -52,4 +52,5 @@ Tracks idle entities and classifies potential sleep candidates (based on movemen
 
 ## Config + Safety Notes
 All systems can be toggled individually, and the adaptive layer exposes a master switch, sampling intervals, and safety budgets for memory/tick time.  
+The current adaptive systems are telemetry-only and do not mutate gameplay state.  
 If any guardrail triggers, the system layer backs off automatically rather than amplifying load.

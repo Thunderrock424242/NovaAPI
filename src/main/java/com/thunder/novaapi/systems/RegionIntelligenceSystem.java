@@ -2,7 +2,9 @@ package com.thunder.novaapi.systems;
 
 import com.thunder.novaapi.config.AdaptiveSystemsConfig;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -10,9 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class RegionIntelligenceSystem implements AdaptiveSystem {
     private final Object2ObjectOpenHashMap<ResourceKey<Level>, Long2LongOpenHashMap> lastSeen = new Object2ObjectOpenHashMap<>();
@@ -61,11 +60,11 @@ public class RegionIntelligenceSystem implements AdaptiveSystem {
                        long tickCounter) {
         long ttl = config.chunkActivityTtlTicks();
         if (ttl > 0) {
-            Iterator<Map.Entry<Long, Long>> iterator = lastSeenMap.long2LongEntrySet().iterator();
+            ObjectIterator<Long2LongMap.Entry> iterator = lastSeenMap.long2LongEntrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<Long, Long> entry = iterator.next();
-                if (tickCounter - entry.getValue() > ttl) {
-                    long key = entry.getKey();
+                Long2LongMap.Entry entry = iterator.next();
+                if (tickCounter - entry.getLongValue() > ttl) {
+                    long key = entry.getLongKey();
                     iterator.remove();
                     scoreMap.remove(key);
                 }
@@ -78,10 +77,10 @@ public class RegionIntelligenceSystem implements AdaptiveSystem {
         }
 
         int toRemove = Math.max(0, lastSeenMap.size() - maxTracked);
-        Iterator<Map.Entry<Long, Long>> iterator = lastSeenMap.long2LongEntrySet().iterator();
+        ObjectIterator<Long2LongMap.Entry> iterator = lastSeenMap.long2LongEntrySet().iterator();
         while (iterator.hasNext() && toRemove > 0) {
-            Map.Entry<Long, Long> entry = iterator.next();
-            long key = entry.getKey();
+            Long2LongMap.Entry entry = iterator.next();
+            long key = entry.getLongKey();
             iterator.remove();
             scoreMap.remove(key);
             toRemove--;

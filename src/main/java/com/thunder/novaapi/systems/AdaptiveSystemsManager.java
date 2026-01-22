@@ -2,8 +2,10 @@ package com.thunder.novaapi.systems;
 
 import com.thunder.novaapi.config.AdaptiveSystemsConfig;
 import net.minecraft.server.MinecraftServer;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class AdaptiveSystemsManager {
@@ -78,8 +80,19 @@ public class AdaptiveSystemsManager {
             return;
         }
         for (AdaptiveSystem system : systems) {
-            NeoForge.EVENT_BUS.register(system);
+            if (hasEventHandlers(system)) {
+                NeoForge.EVENT_BUS.register(system);
+            }
         }
         eventsRegistered = true;
+    }
+
+    private boolean hasEventHandlers(AdaptiveSystem system) {
+        for (Method method : system.getClass().getMethods()) {
+            if (method.isAnnotationPresent(SubscribeEvent.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

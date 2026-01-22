@@ -12,6 +12,9 @@ public class SimulationDensitySystem implements AdaptiveSystem {
     private static final double NEAR_RADIUS = 64.0D;
     private static final double MID_RADIUS = 128.0D;
     private static final double FAR_RADIUS = 192.0D;
+    private static final double NEAR_RADIUS_SQ = NEAR_RADIUS * NEAR_RADIUS;
+    private static final double MID_RADIUS_SQ = MID_RADIUS * MID_RADIUS;
+    private static final double FAR_RADIUS_SQ = FAR_RADIUS * FAR_RADIUS;
 
     private final Object2ObjectOpenHashMap<ResourceKey<Level>, DensitySnapshot> densitySnapshot = new Object2ObjectOpenHashMap<>();
 
@@ -41,13 +44,29 @@ public class SimulationDensitySystem implements AdaptiveSystem {
             int maxNear = 0;
             int maxMid = 0;
             int maxFar = 0;
-            for (ServerPlayer player : level.players()) {
+            var players = level.players();
+            for (ServerPlayer player : players) {
                 if (!context.sampleBudget().tryConsume(1)) {
                     return;
                 }
-                maxNear = Math.max(maxNear, level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(NEAR_RADIUS)).size());
-                maxMid = Math.max(maxMid, level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(MID_RADIUS)).size());
-                maxFar = Math.max(maxFar, level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(FAR_RADIUS)).size());
+                int nearCount = 0;
+                int midCount = 0;
+                int farCount = 0;
+                for (ServerPlayer other : players) {
+                    double distanceSq = player.distanceToSqr(other);
+                    if (distanceSq <= FAR_RADIUS_SQ) {
+                        farCount++;
+                        if (distanceSq <= MID_RADIUS_SQ) {
+                            midCount++;
+                            if (distanceSq <= NEAR_RADIUS_SQ) {
+                                nearCount++;
+                            }
+                        }
+                    }
+                }
+                maxNear = Math.max(maxNear, nearCount);
+                maxMid = Math.max(maxMid, midCount);
+                maxFar = Math.max(maxFar, farCount);
             }
             densitySnapshot.put(level.dimension(), new DensitySnapshot(maxNear, maxMid, maxFar));
         }

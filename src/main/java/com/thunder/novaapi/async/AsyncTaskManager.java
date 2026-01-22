@@ -1,6 +1,8 @@
 package com.thunder.novaapi.async;
 
 import com.thunder.novaapi.Core.NovaAPI;
+import com.thunder.novaapi.api.async.AsyncTaskAPI;
+import com.thunder.novaapi.api.async.AsyncTaskType;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.Objects;
@@ -77,14 +79,14 @@ public final class AsyncTaskManager {
     }
 
     public static CompletableFuture<Boolean> submitCpuTask(String label, TaskPayload taskPayload) {
-        return submitTask(cpuExecutor, label, taskPayload);
+        return submitTask(cpuExecutor, label, taskPayload, AsyncTaskType.CPU);
     }
 
     public static CompletableFuture<Boolean> submitIoTask(String label, TaskPayload taskPayload) {
-        return submitTask(ioExecutor, label, taskPayload);
+        return submitTask(ioExecutor, label, taskPayload, AsyncTaskType.IO);
     }
 
-    private static CompletableFuture<Boolean> submitTask(ThreadPoolExecutor executor, String label, TaskPayload taskPayload) {
+    private static CompletableFuture<Boolean> submitTask(ThreadPoolExecutor executor, String label, TaskPayload taskPayload, AsyncTaskType type) {
         if (!configValues.enabled() || executor == null || !INITIALIZED.get()) {
             return CompletableFuture.completedFuture(false);
         }
@@ -98,7 +100,7 @@ public final class AsyncTaskManager {
                     if (timedOut.get()) {
                         return false;
                     }
-                    return result.filter(task -> !timedOut.get() && enqueueMainThreadTask(label, task)).isPresent();
+                    return result.filter(task -> !timedOut.get() && enqueueMainThreadTask(label, task, type)).isPresent();
                 } catch (Exception e) {
                     NovaAPI.LOGGER.error("[Async] Task '{}' failed", label, e);
                     return false;
@@ -122,11 +124,12 @@ public final class AsyncTaskManager {
         } catch (RejectedExecutionException ex) {
             int rejected = REJECTED.incrementAndGet();
             NovaAPI.LOGGER.warn("[Async] Rejected task '{}' ({} queued, total rejections: {}).", label, executor.getQueue().size(), rejected);
+            AsyncTaskAPI.notifyTaskRejected(label, type, MAIN_THREAD_BACKLOG.get(), configValues.queueSize());
             return CompletableFuture.completedFuture(false);
         }
     }
 
-    private static boolean enqueueMainThreadTask(String label, MainThreadTask task) {
+    private static boolean enqueueMainThreadTask(String label, MainThreadTask task, AsyncTaskType type) {
         Objects.requireNonNull(task, "task");
         int backlog = MAIN_THREAD_BACKLOG.incrementAndGet();
         int maxQueue = configValues.queueSize();
@@ -134,6 +137,7 @@ public final class AsyncTaskManager {
             MAIN_THREAD_BACKLOG.decrementAndGet();
             REJECTED.incrementAndGet();
             NovaAPI.LOGGER.warn("[Async] Main-thread queue full ({}). Dropping task '{}'.", maxQueue, label);
+            AsyncTaskAPI.notifyTaskRejected(label, type, backlog, maxQueue);
             return false;
         }
 
@@ -142,8 +146,12 @@ public final class AsyncTaskManager {
             MAIN_THREAD_BACKLOG.decrementAndGet();
             REJECTED.incrementAndGet();
             NovaAPI.LOGGER.warn("[Async] Failed to enqueue main-thread task '{}'.", label);
+            AsyncTaskAPI.notifyTaskRejected(label, type, backlog, maxQueue);
         } else if (configValues.debugLogging()) {
             NovaAPI.LOGGER.info("[Async] Queued main-thread task '{}' (backlog: {}).", label, backlog);
+        }
+        if (offered) {
+            AsyncTaskAPI.notifyTaskQueued(label, type, backlog, maxQueue);
         }
         return offered;
     }
@@ -168,6 +176,7 @@ public final class AsyncTaskManager {
             processed++;
         }
         appliedLastTick = processed;
+        AsyncTaskAPI.notifyQueueDrained(processed, MAIN_THREAD_BACKLOG.get());
     }
 
     public static AsyncTaskStats snapshot() {

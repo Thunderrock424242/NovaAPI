@@ -1,6 +1,7 @@
 package com.thunder.novaapi.chunk;
 
 import com.thunder.novaapi.Core.NovaAPI;
+import com.thunder.novaapi.api.chunk.ChunkStreamAPI;
 import com.thunder.novaapi.io.BufferPool;
 import com.thunder.novaapi.io.IoExecutors;
 import net.minecraft.nbt.CompoundTag;
@@ -108,6 +109,7 @@ public final class ChunkStreamManager {
             return CompletableFuture.completedFuture(new ChunkLoadResult(pos, null, false));
         }
         lastGameTime.set(gameTime);
+        ChunkStreamAPI.notifyChunkRequested(dimension, pos, ticketType, gameTime);
         ChunkStatusEntry entry = STATE.computeIfAbsent(pos, ignored -> new ChunkStatusEntry());
         entry.touch(gameTime);
         entry.upsertTicket(pos, ticketType, gameTime + ticketType.resolveTtl(config));
@@ -122,6 +124,7 @@ public final class ChunkStreamManager {
             WARM_CACHE_HITS.incrementAndGet();
             entry.transitionTo(pos, ChunkState.READY);
             entry.setLastPersisted(warmPayload.copy());
+            ChunkStreamAPI.notifyChunkLoaded(dimension, pos, true);
             return CompletableFuture.completedFuture(new ChunkLoadResult(pos, warmPayload, true));
         }
         WARM_CACHE_MISSES.incrementAndGet();
@@ -132,6 +135,7 @@ public final class ChunkStreamManager {
             CompoundTag resolved = payload.map(tag -> sliceCache.dedupe(pos, tag)).orElseGet(CompoundTag::new);
             entry.setLastPersisted(resolved.copy());
             entry.transitionTo(pos, ChunkState.READY);
+            ChunkStreamAPI.notifyChunkLoaded(dimension, pos, false);
             return new ChunkLoadResult(pos, resolved, false);
         });
     }
@@ -157,6 +161,7 @@ public final class ChunkStreamManager {
         DirtySegmentSet diff = DirtySegmentSet.diff(entry.getLastPersisted(), sanitized);
         entry.markDirty(diff);
         ioController.enqueueSave(pos, sanitized, diff, gameTime, dimension);
+        ChunkStreamAPI.notifyChunkSaveQueued(dimension, pos, gameTime);
     }
 
     public static void markActive(ChunkPos pos, long gameTime) {
@@ -190,6 +195,7 @@ public final class ChunkStreamManager {
         }
         lastGameTime.set(gameTime);
         ioController.flushAll(gameTime).join();
+        ChunkStreamAPI.notifyFlushAll(gameTime);
     }
 
     public static void flushChunk(ChunkPos pos) {
@@ -204,6 +210,7 @@ public final class ChunkStreamManager {
             WARM_CACHE.remove(pos);
         }
         ioController.flushChunk(pos);
+        ChunkStreamAPI.notifyChunkFlushed(pos);
     }
 
     public static void flushAll() {
@@ -211,6 +218,7 @@ public final class ChunkStreamManager {
             return;
         }
         ioController.flushAll();
+        ChunkStreamAPI.notifyFlushAll(lastGameTime.get());
     }
 
     public static ChunkStreamStats snapshot() {

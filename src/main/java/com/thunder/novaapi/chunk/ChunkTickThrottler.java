@@ -47,24 +47,29 @@ public final class ChunkTickThrottler {
         if (baseRandomTicks <= 0) {
             return 0;
         }
-        double nearestDistance = Double.MAX_VALUE;
+        double nearestDistanceSq = Double.MAX_VALUE;
         double contributingSpeed = 0.0D;
 
         for (ServerPlayer player : level.players()) {
-            double distance = distanceToChunkCenter(pos, player.position());
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
+            double distanceSq = distanceSqToChunkCenter(pos, player.position());
+            if (distanceSq < nearestDistanceSq) {
+                nearestDistanceSq = distanceSq;
                 contributingSpeed = LAST_PLAYER_SAMPLES.getOrDefault(player.getUUID(), PlayerSample.ZERO).speed();
             }
         }
 
-        if (config.fluidRedstoneThrottleRadius() > 0
-                && nearestDistance > config.fluidRedstoneThrottleRadius()
+        double throttleRadius = config.fluidRedstoneThrottleRadius();
+        double randomTickBand = config.randomTickPlayerBand();
+        double throttleRadiusSq = throttleRadius * throttleRadius;
+        double randomTickBandSq = randomTickBand * randomTickBand;
+
+        if (throttleRadius > 0
+                && nearestDistanceSq > throttleRadiusSq
                 && (level.getGameTime() % config.fluidRedstoneThrottleInterval() != 0)) {
             return 0;
         }
 
-        if (nearestDistance > config.randomTickPlayerBand()) {
+        if (nearestDistanceSq > randomTickBandSq) {
             return Math.max(0, (int) Math.round(baseRandomTicks * config.randomTickMinScale()));
         }
 
@@ -73,12 +78,12 @@ public final class ChunkTickThrottler {
         return Math.max(0, (int) Math.round(baseRandomTicks * scale));
     }
 
-    private static double distanceToChunkCenter(ChunkPos pos, Vec3 playerPos) {
+    private static double distanceSqToChunkCenter(ChunkPos pos, Vec3 playerPos) {
         double centerX = pos.getMiddleBlockX();
         double centerZ = pos.getMiddleBlockZ();
         double dx = playerPos.x - centerX;
         double dz = playerPos.z - centerZ;
-        return Math.sqrt(dx * dx + dz * dz);
+        return dx * dx + dz * dz;
     }
 
     private record PlayerSample(Vec3 position, long sampleTick, double speed) {

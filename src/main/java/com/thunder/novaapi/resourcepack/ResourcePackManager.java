@@ -181,7 +181,6 @@ public final class ResourcePackManager {
                     metadata.overlays(), metadata.isHidden());
         }
         return new Pack(locationInfo, supplier, metadata, selectionConfig);
-        return Pack.readMetaAndCreate(locationInfo, supplier, packType, selectionConfig);
     }
 
     private static PackSource createPackSource() {

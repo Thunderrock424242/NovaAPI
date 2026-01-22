@@ -27,3 +27,7 @@ NeoForged Discord: https://discord.neoforged.net/
 Performance and Memory Guidelines:
 =====================
 See [Memory and Performance Guidelines](docs/memory-and-performance-guidelines.md) for NovaAPI-specific recommendations to avoid leaks and keep NeoForge mods efficient.
+
+Mod Developer API Guide:
+=====================
+See [NovaAPI Mod Developer Guide](docs/api.md) for the public APIs and hook points exposed to other mods.

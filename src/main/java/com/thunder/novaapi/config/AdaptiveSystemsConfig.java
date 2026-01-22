@@ -34,7 +34,7 @@ public final class AdaptiveSystemsConfig {
         BUILDER.push("adaptiveSystems");
         ENABLE_ADAPTIVE_SYSTEMS = BUILDER
                 .comment("Master switch for adaptive systems features.")
-                .define("enableAdaptiveSystems", true);
+                .define("enableAdaptiveSystems", false);
 
         BUILDER.push("systems");
         ENABLE_REGION_INTELLIGENCE = BUILDER

@@ -14,12 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ModelRegistryHelper {
     private static final Map<EntityType<?>, ResourceLocation> entityModelMap = new ConcurrentHashMap<>();
+    private static final ResourceLocation DEFAULT_MODEL_PATH =
+            ResourceLocation.tryParse("minecraft:models/entity/default.json");
 
     /**
      * Scans registered EntityTypes and stores their model paths
      * for use with instanced rendering.
      */
     public static void initialize() {
+        entityModelMap.clear();
         for (EntityType<?> entityType : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation modelPath = resolveModelPath(entityType);
             entityModelMap.put(entityType, modelPath);
@@ -32,7 +35,11 @@ public class ModelRegistryHelper {
      */
     private static ResourceLocation resolveModelPath(EntityType<?> entityType) {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
-        return ResourceLocation.tryParse(id.getNamespace() + ":models/entity/" + id.getPath() + ".json");
+        if (id == null) {
+            return DEFAULT_MODEL_PATH;
+        }
+        ResourceLocation resolved = ResourceLocation.tryParse(id.getNamespace() + ":models/entity/" + id.getPath() + ".json");
+        return resolved != null ? resolved : DEFAULT_MODEL_PATH;
     }
 
     /**
@@ -40,8 +47,21 @@ public class ModelRegistryHelper {
      * Defaults to a placeholder if no path is registered.
      */
     public static ResourceLocation getModelPath(EntityType<?> type) {
-        return entityModelMap.getOrDefault(type,
-                ResourceLocation.tryParse("minecraft:models/entity/default.json"));
+        return entityModelMap.getOrDefault(type, DEFAULT_MODEL_PATH);
+    }
+
+    /**
+     * Registers a model override for a specific entity type.
+     */
+    public static void registerModelPath(EntityType<?> type, ResourceLocation modelPath) {
+        if (type == null || modelPath == null) {
+            return;
+        }
+        entityModelMap.put(type, modelPath);
+    }
+
+    public static boolean isDefaultModel(ResourceLocation modelPath) {
+        return DEFAULT_MODEL_PATH != null && DEFAULT_MODEL_PATH.equals(modelPath);
     }
 
     /**

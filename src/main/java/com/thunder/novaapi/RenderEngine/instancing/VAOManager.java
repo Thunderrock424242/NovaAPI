@@ -1,5 +1,6 @@
 package com.thunder.novaapi.RenderEngine.instancing;
 
+import com.thunder.novaapi.Core.NovaAPI;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -23,15 +24,24 @@ public class VAOManager {
      * If the model is already loaded, returns the cached VAO.
      */
     public static int getOrLoadVAO(ResourceLocation modelPath) {
+        if (modelPath == null) {
+            NovaAPI.LOGGER.warn("[VAOManager] Model path was null; skipping instanced load.");
+            return -1;
+        }
         if (disabledModels.getOrDefault(modelPath, false)) {
             return -1; // Disabled due to prior failure
         }
 
         return loadedVAOs.computeIfAbsent(modelPath, path -> {
             try {
+                if (ModelRegistryHelper.isDefaultModel(path)) {
+                    NovaAPI.LOGGER.debug("[VAOManager] Default model placeholder detected ({}); skipping instanced load.", path);
+                    disabledModels.put(path, true);
+                    return -1;
+                }
                 return loadVAOFromModel(path);
             } catch (Exception e) {
-                System.err.println("[VAOManager] Failed to load model: " + path + " — Falling back to vanilla.");
+                NovaAPI.LOGGER.warn("[VAOManager] Failed to load model: {} — Falling back to vanilla.", path, e);
                 disabledModels.put(path, true);
                 return -1;
             }
@@ -98,7 +108,7 @@ public class VAOManager {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        System.out.println("[VAOManager] Loaded VAO for model: " + modelPath);
+        NovaAPI.LOGGER.info("[VAOManager] Loaded VAO for model: {}", modelPath);
         return vao;
     }
 

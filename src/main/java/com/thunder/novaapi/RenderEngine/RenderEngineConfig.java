@@ -7,6 +7,9 @@ public final class RenderEngineConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_OVERLAY_BATCHING;
     public static final ModConfigSpec.BooleanValue ENABLE_PARTICLE_CULLING;
     public static final ModConfigSpec.IntValue PARTICLE_CULL_DISTANCE;
+    public static final ModConfigSpec.BooleanValue ENABLE_INSTANCED_RENDERING;
+    public static final ModConfigSpec.DoubleValue INSTANCED_LOD0_DISTANCE;
+    public static final ModConfigSpec.DoubleValue INSTANCED_LOD1_DISTANCE;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -26,6 +29,18 @@ public final class RenderEngineConfig {
                 .defineInRange("particleCullingDistance", 128, 0, 4096);
         builder.pop();
 
+        builder.push("Instanced Rendering");
+        ENABLE_INSTANCED_RENDERING = builder
+                .comment("Enable instanced rendering for supported entity models.")
+                .define("enableInstancedRendering", true);
+        INSTANCED_LOD0_DISTANCE = builder
+                .comment("Distance in blocks for LOD0 instanced models.")
+                .defineInRange("instancedLod0Distance", 16.0D, 1.0D, 256.0D);
+        INSTANCED_LOD1_DISTANCE = builder
+                .comment("Distance in blocks for LOD1 instanced models.")
+                .defineInRange("instancedLod1Distance", 48.0D, 1.0D, 512.0D);
+        builder.pop();
+
         CONFIG_SPEC = builder.build();
     }
 
@@ -42,5 +57,17 @@ public final class RenderEngineConfig {
 
     public static int getParticleCullingDistance() {
         return PARTICLE_CULL_DISTANCE.get();
+    }
+
+    public static boolean isInstancedRenderingEnabled() {
+        return ENABLE_INSTANCED_RENDERING.get();
+    }
+
+    public static double getInstancedLod0Distance() {
+        return INSTANCED_LOD0_DISTANCE.get();
+    }
+
+    public static double getInstancedLod1Distance() {
+        return INSTANCED_LOD1_DISTANCE.get();
     }
 }

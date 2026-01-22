@@ -1,6 +1,7 @@
 package com.thunder.novaapi.utils;
 
 import com.thunder.novaapi.Core.NovaAPI;
+import com.thunder.novaapi.config.NovaAPIConfig;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
@@ -47,6 +48,9 @@ public class ThreadMonitor {
     }
 
     private static void logAllThreads() {
+        if (!NovaAPIConfig.isMemoryThreadLogsEnabled()) {
+            return;
+        }
         Map<Thread, StackTraceElement[]> threads = Thread.getAllStackTraces();
         NovaAPI.LOGGER.debug("📌 Active Threads: {}", threads.size());
 
@@ -68,7 +72,9 @@ public class ThreadMonitor {
                         info.getThreadName(), info.getThreadState(), info.getLockOwnerName());
             }
         } else {
-            NovaAPI.LOGGER.debug("✅ No deadlocked threads detected.");
+            if (NovaAPIConfig.isMemoryThreadLogsEnabled()) {
+                NovaAPI.LOGGER.debug("✅ No deadlocked threads detected.");
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ public class NovaAPIConfig {
     // 🔹 General Settings
     public static final ModConfigSpec.BooleanValue ENABLE_NOVA_API;
     public static final ModConfigSpec.BooleanValue MODPACK_RESOURCE_PROFILE;
+    public static final ModConfigSpec.BooleanValue ENABLE_MEMORY_THREAD_LOGS;
 
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
@@ -26,6 +27,9 @@ public class NovaAPIConfig {
         MODPACK_RESOURCE_PROFILE = BUILDER
                 .comment("Enable modpack-friendly tuning to lower CPU and memory usage (auto-adjusts Nova API internal limits).")
                 .define("modpackResourceProfile", false);
+        ENABLE_MEMORY_THREAD_LOGS = BUILDER
+                .comment("Enable debug logs for memory usage and thread counts.")
+                .define("enableMemoryThreadLogs", false);
         BUILDER.pop();
 
         BUILDER.push("Chunk Optimization Settings");
@@ -54,6 +58,14 @@ public class NovaAPIConfig {
             return MODPACK_RESOURCE_PROFILE.get();
         } catch (IllegalStateException ex) {
             return MODPACK_RESOURCE_PROFILE.getDefault();
+        }
+    }
+
+    public static boolean isMemoryThreadLogsEnabled() {
+        try {
+            return ENABLE_MEMORY_THREAD_LOGS.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_MEMORY_THREAD_LOGS.getDefault();
         }
     }
 }

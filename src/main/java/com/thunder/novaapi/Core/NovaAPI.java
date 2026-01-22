@@ -19,6 +19,7 @@ import com.thunder.novaapi.chunk.ChunkStreamingConfig;
 import com.thunder.novaapi.chunk.DiskChunkStorageAdapter;
 import com.thunder.novaapi.chunk.ChunkTickThrottler;
 import com.thunder.novaapi.command.*;
+import com.thunder.novaapi.config.AdaptiveSystemsConfig;
 import com.thunder.novaapi.config.ConfigRegistrationValidator;
 import com.thunder.novaapi.config.NovaAPIConfig;
 import com.thunder.novaapi.config.PerformanceMitigationConfig;
@@ -26,6 +27,7 @@ import com.thunder.novaapi.RenderEngine.RenderEngineConfig;
 import com.thunder.novaapi.io.BufferPool;
 import com.thunder.novaapi.io.IoExecutors;
 import com.thunder.novaapi.resourcepack.ResourcePackOptimizationConfig;
+import com.thunder.novaapi.systems.AdaptiveSystemsManager;
 import com.thunder.novaapi.task.BackgroundTaskScheduler;
 import com.thunder.novaapi.utils.ThreadMonitor;
 import net.minecraft.commands.CommandSourceStack;
@@ -81,6 +83,7 @@ public class NovaAPI {
     private static long worstTickTimeNanos = 0L;
     private static int serverTickCounter = 0;
     private final requestperfadvice requestperfadvice = new requestperfadvice();
+    private final AdaptiveSystemsManager adaptiveSystemsManager = new AdaptiveSystemsManager();
 
     public NovaAPI(IEventBus modEventBus, ModContainer container) {
         LOGGER.info("NovaAPI initialized with async + chunk streaming pipeline.");
@@ -110,6 +113,8 @@ public class NovaAPI {
                 CONFIG_FOLDER + "novaapi-rendering.toml");
         ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, ResourcePackOptimizationConfig.CONFIG_SPEC,
                 CONFIG_FOLDER + "novaapi-resourcepacks.toml");
+        ConfigRegistrationValidator.register(container, ModConfig.Type.COMMON, AdaptiveSystemsConfig.CONFIG_SPEC,
+                CONFIG_FOLDER + "novaapi-adaptive-systems.toml");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -128,6 +133,7 @@ public class NovaAPI {
         MinecraftServer server = event.getServer();
         initializeAsyncAndChunkSystems(server);
         ThreadMonitor.startMonitoring();
+        adaptiveSystemsManager.onServerStarting();
     }
 
     @SubscribeEvent
@@ -172,6 +178,7 @@ public class NovaAPI {
         if (server.overworld() != null) {
             ChunkStreamManager.tick(server.overworld().getGameTime());
         }
+        adaptiveSystemsManager.tick(server);
         PerformanceMitigationController.tick(server);
         if (!event.hasTime()) return;
 
@@ -214,6 +221,7 @@ public class NovaAPI {
         shutdown();
         REGION_CACHE.clear();
         BackgroundTaskScheduler.shutdown();
+        adaptiveSystemsManager.onServerStopping();
     }
 
     private void restartAsyncSystems() {

@@ -11,6 +11,7 @@ import java.util.Objects;
 
 public final class ParticleCullingManager {
     private static final List<ParticleRenderRequest> QUEUED_REQUESTS = new ArrayList<>();
+    private static final List<ParticleRenderRequest> RENDER_REQUESTS = new ArrayList<>();
 
     private ParticleCullingManager() {
     }
@@ -23,17 +24,17 @@ public final class ParticleCullingManager {
     }
 
     public static void render(Frustum frustum, Vec3 cameraPosition) {
-        List<ParticleRenderRequest> requests;
         synchronized (QUEUED_REQUESTS) {
             if (QUEUED_REQUESTS.isEmpty()) {
                 return;
             }
-            requests = new ArrayList<>(QUEUED_REQUESTS);
+            RENDER_REQUESTS.clear();
+            RENDER_REQUESTS.addAll(QUEUED_REQUESTS);
             QUEUED_REQUESTS.clear();
         }
 
         if (!RenderEngineConfig.isParticleCullingEnabled()) {
-            for (ParticleRenderRequest request : requests) {
+            for (ParticleRenderRequest request : RENDER_REQUESTS) {
                 request.submit().run();
             }
             return;
@@ -42,7 +43,7 @@ public final class ParticleCullingManager {
         int maxDistance = RenderEngineConfig.getParticleCullingDistance();
         double maxDistanceSquared = maxDistance > 0 ? maxDistance * (double) maxDistance : Double.POSITIVE_INFINITY;
 
-        for (ParticleRenderRequest request : requests) {
+        for (ParticleRenderRequest request : RENDER_REQUESTS) {
             if (cameraPosition != null && cameraPosition.distanceToSqr(request.position()) > maxDistanceSquared) {
                 continue;
             }

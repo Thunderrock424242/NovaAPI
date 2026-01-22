@@ -1,11 +1,11 @@
 package com.thunder.novaapi.cache;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public class RegionScopedCache<V> {
         }
 
         V value = supplier.get();
-        cache.put(key, new Entry<>(value, Instant.now().toEpochMilli()));
+        cache.put(key, new Entry<>(value, System.currentTimeMillis()));
         enforceLimit(cache);
         return value;
     }
@@ -67,21 +67,23 @@ public class RegionScopedCache<V> {
     }
 
     private void enforceLimit(Long2ObjectOpenHashMap<Entry<V>> cache) {
+        if (maxEntriesPerDimension <= 0) {
+            return;
+        }
         while (cache.size() > maxEntriesPerDimension) {
             // Remove the oldest entry to stay under the cap.
-            long[] keys = cache.keySet().toLongArray();
-            Entry<V>[] values = cache.values().toArray(new Entry[0]);
             long oldestTimestamp = Long.MAX_VALUE;
-            long oldestKey = 0;
-
-            for (int i = 0; i < keys.length; i++) {
-                Entry<V> entry = values[i];
-                if (entry != null && entry.createdAt() < oldestTimestamp) {
-                    oldestTimestamp = entry.createdAt();
-                    oldestKey = keys[i];
+            long oldestKey = Long.MIN_VALUE;
+            for (Long2ObjectMap.Entry<Entry<V>> entry : cache.long2ObjectEntrySet()) {
+                Entry<V> value = entry.getValue();
+                if (value != null && value.createdAt() < oldestTimestamp) {
+                    oldestTimestamp = value.createdAt();
+                    oldestKey = entry.getLongKey();
                 }
             }
-
+            if (oldestKey == Long.MIN_VALUE) {
+                break;
+            }
             cache.remove(oldestKey);
         }
     }
@@ -91,12 +93,12 @@ public class RegionScopedCache<V> {
             return;
         }
 
-        long cutoff = Instant.now().toEpochMilli() - ttlMillis;
-        long[] keys = cache.keySet().toLongArray();
-        for (long key : keys) {
-            Entry<V> entry = cache.get(key);
+        long cutoff = System.currentTimeMillis() - ttlMillis;
+        var iterator = cache.long2ObjectEntrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<V> entry = iterator.next().getValue();
             if (entry != null && entry.createdAt() < cutoff) {
-                cache.remove(key);
+                iterator.remove();
             }
         }
     }

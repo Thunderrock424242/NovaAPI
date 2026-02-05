@@ -138,6 +138,10 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
+        if (!NovaAPIConfig.isDebugCommandsEnabled()) {
+            LOGGER.info("[NovaAPI] Debug commands disabled by config.");
+            return;
+        }
         MemoryDebugCommand.register(event.getDispatcher());
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         MemCheckCommand.register(event.getDispatcher());
@@ -165,14 +169,18 @@ public class NovaAPI {
             worstTickTimeNanos = Math.max(worstTickTimeNanos, duration);
         }
         lastTickTimeNanos = now;
-        for (ServerLevel level : server.getAllLevels()) {
-            ChunkTickThrottler.tick(level);
+        if (NovaAPIConfig.isChunkOptimizationsEnabled()) {
+            for (ServerLevel level : server.getAllLevels()) {
+                ChunkTickThrottler.tick(level);
+            }
         }
         AsyncTaskManager.drainMainThreadQueue(server);
         if (server.overworld() != null) {
             ChunkStreamManager.tick(server.overworld().getGameTime());
         }
-        PerformanceMitigationController.tick(server);
+        if (NovaAPIConfig.isAutomaticPerformanceMitigationsEnabled()) {
+            PerformanceMitigationController.tick(server);
+        }
         if (!event.hasTime()) return;
 
         if (++serverTickCounter >= LOG_INTERVAL) {
@@ -187,9 +195,12 @@ public class NovaAPI {
 
             long worstTickMillis = TimeUnit.NANOSECONDS.toMillis(worstTickTimeNanos);
             worstTickTimeNanos = 0L;
-            if (worstTickMillis > PerformanceAdvisor.DEFAULT_TICK_BUDGET_MS) {
+            if (NovaAPIConfig.isAiPerformanceAdvisorEnabled()
+                    && worstTickMillis > PerformanceAdvisor.DEFAULT_TICK_BUDGET_MS) {
                 PerformanceAdvisoryRequest request = PerformanceAdvisor.observe(server, worstTickMillis);
-                PerformanceMitigationController.buildActionsFromRequest(request);
+                if (NovaAPIConfig.isAutomaticPerformanceMitigationsEnabled()) {
+                    PerformanceMitigationController.buildActionsFromRequest(request);
+                }
                 String advisory = requestperfadvice.requestPerformanceAdvice(request);
                 LOGGER.info("[AI Advisor] {}", advisory);
             }
@@ -272,20 +283,90 @@ public class NovaAPI {
 
     private static ChunkStreamingConfig.ChunkConfigValues resolveChunkConfig() {
         ChunkStreamingConfig.ChunkConfigValues base = ChunkStreamingConfig.values();
-        if (!NovaAPIConfig.isModpackProfileEnabled()) {
-            return base;
+        if (!NovaAPIConfig.isChunkOptimizationsEnabled()) {
+            return new ChunkStreamingConfig.ChunkConfigValues(
+                    false,
+                    base.hotCacheLimit(),
+                    base.warmCacheLimit(),
+                    base.splitWarmCache(),
+                    base.saveDebounceTicks(),
+                    base.playerTicketTtl(),
+                    base.entityTicketTtl(),
+                    base.redstoneTicketTtl(),
+                    base.structureTicketTtl(),
+                    base.maxParallelIo(),
+                    base.compressionLevel(),
+                    base.compressionCodec(),
+                    base.perDimensionExecutors(),
+                    base.ioThreads(),
+                    base.ioQueueSize(),
+                    base.bufferSliceBytes(),
+                    base.bufferSlicesPerThread(),
+                    base.skipWarmCacheTicking(),
+                    base.fluidRedstoneThrottleRadius(),
+                    base.fluidRedstoneThrottleInterval(),
+                    base.randomTickMinScale(),
+                    base.randomTickMaxScale(),
+                    base.movementSpeedForMaxScale(),
+                    base.randomTickPlayerBand(),
+                    base.sliceInternLimit(),
+                    base.deltaChangeBudget(),
+                    base.lightCompressionLevel(),
+                    base.writeFlushIntervalTicks(),
+                    base.maxMeshRebuildsPerTick(),
+                    base.meshUploadBatchSize(),
+                    base.maxPendingMeshRebuilds(),
+                    base.maxPendingMeshUploads(),
+                    base.cacheFolderName(),
+                    base.storeCacheInWorldConfig()
+            );
         }
+
         int hardwareThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
-        int ioThreads = Math.max(1, Math.min(base.ioThreads(), Math.max(1, hardwareThreads / 6)));
-        int hotCacheLimit = Math.min(base.hotCacheLimit(), 96);
-        int warmCacheLimit = Math.min(base.warmCacheLimit(), 192);
-        int maxParallelIo = Math.min(base.maxParallelIo(), 2);
-        int ioQueueSize = Math.min(base.ioQueueSize(), 96);
-        int bufferSlicesPerThread = Math.min(base.bufferSlicesPerThread(), 4);
-        int maxMeshRebuildsPerTick = Math.min(base.maxMeshRebuildsPerTick(), 2);
-        int meshUploadBatchSize = Math.min(base.meshUploadBatchSize(), 8);
-        int maxPendingMeshRebuilds = base.maxPendingMeshRebuilds() == 0 ? 0 : Math.min(base.maxPendingMeshRebuilds(), 1024);
-        int maxPendingMeshUploads = base.maxPendingMeshUploads() == 0 ? 0 : Math.min(base.maxPendingMeshUploads(), 2048);
+        boolean modpackProfile = NovaAPIConfig.isModpackProfileEnabled();
+
+        int ioThreads = base.ioThreads();
+        int maxParallelIo = base.maxParallelIo();
+        int ioQueueSize = base.ioQueueSize();
+        int hotCacheLimit = base.hotCacheLimit();
+        int warmCacheLimit = base.warmCacheLimit();
+        int playerTicketTtl = base.playerTicketTtl();
+        int entityTicketTtl = base.entityTicketTtl();
+        int redstoneTicketTtl = base.redstoneTicketTtl();
+        int structureTicketTtl = base.structureTicketTtl();
+        int bufferSlicesPerThread = base.bufferSlicesPerThread();
+        int maxMeshRebuildsPerTick = base.maxMeshRebuildsPerTick();
+        int meshUploadBatchSize = base.meshUploadBatchSize();
+        int maxPendingMeshRebuilds = base.maxPendingMeshRebuilds() == 0 ? 0 : base.maxPendingMeshRebuilds();
+        int maxPendingMeshUploads = base.maxPendingMeshUploads() == 0 ? 0 : base.maxPendingMeshUploads();
+
+        if (!NovaAPIConfig.isAsyncChunkLoadingEnabled()) {
+            ioThreads = 1;
+            maxParallelIo = 1;
+            ioQueueSize = Math.min(ioQueueSize, 64);
+        }
+
+        if (!NovaAPIConfig.isSmartChunkRetentionEnabled()) {
+            hotCacheLimit = Math.min(hotCacheLimit, 32);
+            warmCacheLimit = Math.min(warmCacheLimit, 64);
+            playerTicketTtl = Math.min(playerTicketTtl, 40);
+            entityTicketTtl = Math.min(entityTicketTtl, 40);
+            redstoneTicketTtl = Math.min(redstoneTicketTtl, 20);
+            structureTicketTtl = Math.min(structureTicketTtl, 80);
+        }
+
+        if (modpackProfile) {
+            ioThreads = Math.max(1, Math.min(ioThreads, Math.max(1, hardwareThreads / 6)));
+            hotCacheLimit = Math.min(hotCacheLimit, 96);
+            warmCacheLimit = Math.min(warmCacheLimit, 192);
+            maxParallelIo = Math.min(maxParallelIo, 2);
+            ioQueueSize = Math.min(ioQueueSize, 96);
+            bufferSlicesPerThread = Math.min(bufferSlicesPerThread, 4);
+            maxMeshRebuildsPerTick = Math.min(maxMeshRebuildsPerTick, 2);
+            meshUploadBatchSize = Math.min(meshUploadBatchSize, 8);
+            maxPendingMeshRebuilds = maxPendingMeshRebuilds == 0 ? 0 : Math.min(maxPendingMeshRebuilds, 1024);
+            maxPendingMeshUploads = maxPendingMeshUploads == 0 ? 0 : Math.min(maxPendingMeshUploads, 2048);
+        }
 
         return new ChunkStreamingConfig.ChunkConfigValues(
                 base.enabled(),
@@ -293,10 +374,10 @@ public class NovaAPI {
                 warmCacheLimit,
                 base.splitWarmCache(),
                 base.saveDebounceTicks(),
-                base.playerTicketTtl(),
-                base.entityTicketTtl(),
-                base.redstoneTicketTtl(),
-                base.structureTicketTtl(),
+                playerTicketTtl,
+                entityTicketTtl,
+                redstoneTicketTtl,
+                structureTicketTtl,
                 maxParallelIo,
                 base.compressionLevel(),
                 base.compressionCodec(),

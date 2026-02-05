@@ -10,6 +10,9 @@ public class NovaAPIConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_NOVA_API;
     public static final ModConfigSpec.BooleanValue MODPACK_RESOURCE_PROFILE;
     public static final ModConfigSpec.BooleanValue ENABLE_MEMORY_THREAD_LOGS;
+    public static final ModConfigSpec.BooleanValue ENABLE_DEBUG_COMMANDS;
+    public static final ModConfigSpec.BooleanValue ENABLE_AI_PERFORMANCE_ADVISOR;
+    public static final ModConfigSpec.BooleanValue ENABLE_AUTOMATIC_PERFORMANCE_MITIGATIONS;
 
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
@@ -30,6 +33,15 @@ public class NovaAPIConfig {
         ENABLE_MEMORY_THREAD_LOGS = BUILDER
                 .comment("Enable debug logs for memory usage and thread counts.")
                 .define("enableMemoryThreadLogs", false);
+        ENABLE_DEBUG_COMMANDS = BUILDER
+                .comment("Register NovaAPI debug and profiling commands. Disable on production servers to reduce overhead.")
+                .define("enableDebugCommands", false);
+        ENABLE_AI_PERFORMANCE_ADVISOR = BUILDER
+                .comment("Enable periodic AI performance advisor analysis and recommendation logging.")
+                .define("enableAiPerformanceAdvisor", false);
+        ENABLE_AUTOMATIC_PERFORMANCE_MITIGATIONS = BUILDER
+                .comment("Enable automatic mitigation tick processing (pathfinding throttle, distance adjustments, etc.).")
+                .define("enableAutomaticPerformanceMitigations", true);
         BUILDER.pop();
 
         BUILDER.push("Chunk Optimization Settings");
@@ -66,6 +78,55 @@ public class NovaAPIConfig {
             return ENABLE_MEMORY_THREAD_LOGS.get();
         } catch (IllegalStateException ex) {
             return ENABLE_MEMORY_THREAD_LOGS.getDefault();
+        }
+    }
+
+
+    public static boolean isChunkOptimizationsEnabled() {
+        try {
+            return ENABLE_CHUNK_OPTIMIZATIONS.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_CHUNK_OPTIMIZATIONS.getDefault();
+        }
+    }
+
+    public static boolean isAsyncChunkLoadingEnabled() {
+        try {
+            return ASYNC_CHUNK_LOADING.get();
+        } catch (IllegalStateException ex) {
+            return ASYNC_CHUNK_LOADING.getDefault();
+        }
+    }
+
+    public static boolean isSmartChunkRetentionEnabled() {
+        try {
+            return SMART_CHUNK_RETENTION.get();
+        } catch (IllegalStateException ex) {
+            return SMART_CHUNK_RETENTION.getDefault();
+        }
+    }
+
+    public static boolean isDebugCommandsEnabled() {
+        try {
+            return ENABLE_DEBUG_COMMANDS.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_DEBUG_COMMANDS.getDefault();
+        }
+    }
+
+    public static boolean isAiPerformanceAdvisorEnabled() {
+        try {
+            return ENABLE_AI_PERFORMANCE_ADVISOR.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_AI_PERFORMANCE_ADVISOR.getDefault();
+        }
+    }
+
+    public static boolean isAutomaticPerformanceMitigationsEnabled() {
+        try {
+            return ENABLE_AUTOMATIC_PERFORMANCE_MITIGATIONS.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_AUTOMATIC_PERFORMANCE_MITIGATIONS.getDefault();
         }
     }
 }

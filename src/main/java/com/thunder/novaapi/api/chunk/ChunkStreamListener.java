@@ -1,5 +1,6 @@
 package com.thunder.novaapi.api.chunk;
 
+import com.thunder.novaapi.chunk.ChunkLifecycleStage;
 import com.thunder.novaapi.chunk.ChunkTicketType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
@@ -28,6 +29,13 @@ public interface ChunkStreamListener {
      * The dimension may be null when the request originates from a non-dimensioned call.
      */
     default void onChunkSaveQueued(ResourceKey<Level> dimension, ChunkPos pos, long gameTime) {
+    }
+
+    /**
+     * Called when a chunk advances through a high-level pipeline stage.
+     * The dimension may be null when the event is emitted from non-dimensioned internals.
+     */
+    default void onChunkLifecycleStage(ResourceKey<Level> dimension, ChunkPos pos, ChunkLifecycleStage stage, long gameTime) {
     }
 
     /**

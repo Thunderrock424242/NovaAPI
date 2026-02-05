@@ -31,3 +31,7 @@ See [Memory and Performance Guidelines](docs/memory-and-performance-guidelines.m
 Mod Developer API Guide:
 =====================
 See [NovaAPI Mod Developer Guide](docs/api.md) for the public APIs and hook points exposed to other mods.
+
+Chunk Pipeline Backend:
+=====================
+See [Chunk Pipeline Backend (Staged Lifecycle)](docs/chunk-pipeline-backend.md) for the orchestration model aimed at large modpacks and TPS-sensitive servers.

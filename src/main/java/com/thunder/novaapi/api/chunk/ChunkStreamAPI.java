@@ -1,6 +1,7 @@
 package com.thunder.novaapi.api.chunk;
 
 import com.thunder.novaapi.chunk.ChunkLoadResult;
+import com.thunder.novaapi.chunk.ChunkLifecycleStage;
 import com.thunder.novaapi.chunk.ChunkStreamManager;
 import com.thunder.novaapi.chunk.ChunkTicketType;
 import net.minecraft.nbt.CompoundTag;
@@ -65,6 +66,12 @@ public final class ChunkStreamAPI {
     public static void notifyChunkSaveQueued(ResourceKey<Level> dimension, ChunkPos pos, long gameTime) {
         for (ChunkStreamListener listener : LISTENERS) {
             listener.onChunkSaveQueued(dimension, pos, gameTime);
+        }
+    }
+
+    public static void notifyChunkLifecycleStage(ResourceKey<Level> dimension, ChunkPos pos, ChunkLifecycleStage stage, long gameTime) {
+        for (ChunkStreamListener listener : LISTENERS) {
+            listener.onChunkLifecycleStage(dimension, pos, stage, gameTime);
         }
     }
 

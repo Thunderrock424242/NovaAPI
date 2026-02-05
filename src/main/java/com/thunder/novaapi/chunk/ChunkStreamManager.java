@@ -113,6 +113,7 @@ public final class ChunkStreamManager {
         ChunkStatusEntry entry = STATE.computeIfAbsent(pos, ignored -> new ChunkStatusEntry());
         entry.touch(gameTime);
         entry.upsertTicket(pos, ticketType, gameTime + ticketType.resolveTtl(config));
+        ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.TICKET_CREATED, gameTime);
         entry.transitionTo(pos, ChunkState.QUEUED);
         promoteHot(pos);
 
@@ -130,9 +131,14 @@ public final class ChunkStreamManager {
         WARM_CACHE_MISSES.incrementAndGet();
 
         entry.transitionTo(pos, ChunkState.LOADING);
+        ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.IO_READ_QUEUED, gameTime);
         ioController.cancelPendingSave(pos);
         return ioController.loadChunk(pos, dimension).thenApply(payload -> {
+            ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.IO_READ_COMPLETED, gameTime);
             CompoundTag resolved = payload.map(tag -> sliceCache.dedupe(pos, tag)).orElseGet(CompoundTag::new);
+            ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.COMPRESSION_DECODED, gameTime);
+            ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.GENERATION_PREPARED, gameTime);
+            ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.LIGHTING_PREPARED, gameTime);
             entry.setLastPersisted(resolved.copy());
             entry.transitionTo(pos, ChunkState.READY);
             ChunkStreamAPI.notifyChunkLoaded(dimension, pos, false);
@@ -162,6 +168,7 @@ public final class ChunkStreamManager {
         entry.markDirty(diff);
         ioController.enqueueSave(pos, sanitized, diff, gameTime, dimension);
         ChunkStreamAPI.notifyChunkSaveQueued(dimension, pos, gameTime);
+        ChunkStreamAPI.notifyChunkLifecycleStage(dimension, pos, ChunkLifecycleStage.DELTA_SYNC_QUEUED, gameTime);
     }
 
     public static void markActive(ChunkPos pos, long gameTime) {
@@ -211,6 +218,7 @@ public final class ChunkStreamManager {
         }
         ioController.flushChunk(pos);
         ChunkStreamAPI.notifyChunkFlushed(pos);
+        ChunkStreamAPI.notifyChunkLifecycleStage(null, pos, ChunkLifecycleStage.FLUSHED, lastGameTime.get());
     }
 
     public static void flushAll() {
@@ -369,6 +377,7 @@ public final class ChunkStreamManager {
         if (removeState) {
             STATE.remove(pos);
         }
+        ChunkStreamAPI.notifyChunkLifecycleStage(null, pos, ChunkLifecycleStage.EVICTED, lastGameTime.get());
         NovaAPI.LOGGER.debug("[ChunkStream] Evicted chunk {} ({})", pos, reason);
     }
 
@@ -603,6 +612,7 @@ public final class ChunkStreamManager {
                     }
 
                     adapter.write(pos, payload);
+                    ChunkStreamAPI.notifyChunkLifecycleStage(save.dimension(), pos, ChunkLifecycleStage.IO_WRITE_COMPLETED, lastGameTime.get());
                     ChunkStatusEntry statusEntry = STATE.get(pos);
                     if (statusEntry != null) {
                         statusEntry.setLastPersisted(payload.copy());

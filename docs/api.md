@@ -106,8 +106,15 @@ ChunkStreamAPI.registerListener(new ChunkStreamListener() {
     public void onChunkLoaded(ResourceKey<Level> dimension, ChunkPos pos, boolean warmCacheHit) {
         // React to loaded chunk payloads
     }
+
+    @Override
+    public void onChunkLifecycleStage(ResourceKey<Level> dimension, ChunkPos pos, ChunkLifecycleStage stage, long gameTime) {
+        // Observe staged backend progress: ticket -> I/O -> decode -> generation -> lighting -> delta sync
+    }
 });
 ```
+
+The lifecycle callback is the recommended integration point for large modpacks that want to tune or trace chunk orchestration under heavy load.
 
 ## Render Engine APIs
 

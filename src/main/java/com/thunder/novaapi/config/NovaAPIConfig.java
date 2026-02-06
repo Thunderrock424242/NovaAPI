@@ -59,7 +59,7 @@ public class NovaAPIConfig {
         BUILDER.push("Render Culling Settings");
         ENABLE_OCCLUSION_CULLING = BUILDER
                 .comment("Enable occlusion culling for entity instanced rendering. Disable if compatibility issues arise.")
-                .define("enableOcclusionCulling", true);
+                .define("enableOcclusionCulling", false);
         BUILDER.pop();
 
         CONFIG = BUILDER.build();

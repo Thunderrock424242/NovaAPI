@@ -13,6 +13,11 @@ public class NovaAPIConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_DEBUG_COMMANDS;
     public static final ModConfigSpec.BooleanValue ENABLE_AI_PERFORMANCE_ADVISOR;
     public static final ModConfigSpec.BooleanValue ENABLE_AUTOMATIC_PERFORMANCE_MITIGATIONS;
+    public static final ModConfigSpec.BooleanValue ENABLE_ASYNC_TASKS;
+    public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_STREAMING;
+    public static final ModConfigSpec.BooleanValue ENABLE_MOD_DATA_CACHE;
+    public static final ModConfigSpec.BooleanValue ENABLE_RESOURCEPACK_OPTIMIZATIONS;
+    public static final ModConfigSpec.BooleanValue ENABLE_RENDER_ENGINE_OPTIMIZATIONS;
 
     // 🔹 Chunk Optimization Settings
     public static final ModConfigSpec.BooleanValue ENABLE_CHUNK_OPTIMIZATIONS;
@@ -44,6 +49,24 @@ public class NovaAPIConfig {
                 .define("enableAutomaticPerformanceMitigations", true);
         BUILDER.pop();
 
+        BUILDER.push("Feature Toggles");
+        ENABLE_ASYNC_TASKS = BUILDER
+                .comment("Enable the async task system (worker threads, task queues).")
+                .define("enableAsyncTasks", true);
+        ENABLE_CHUNK_STREAMING = BUILDER
+                .comment("Enable the chunk streaming pipeline and related optimizations.")
+                .define("enableChunkStreaming", true);
+        ENABLE_MOD_DATA_CACHE = BUILDER
+                .comment("Enable the persistent mod data cache for downloadable content.")
+                .define("enableModDataCache", true);
+        ENABLE_RESOURCEPACK_OPTIMIZATIONS = BUILDER
+                .comment("Enable NovaAPI resource pack optimization features.")
+                .define("enableResourcepackOptimizations", true);
+        ENABLE_RENDER_ENGINE_OPTIMIZATIONS = BUILDER
+                .comment("Enable NovaAPI render engine optimizations (batching, culling, instancing).")
+                .define("enableRenderEngineOptimizations", true);
+        BUILDER.pop();
+
         BUILDER.push("Chunk Optimization Settings");
         ENABLE_CHUNK_OPTIMIZATIONS = BUILDER
                 .comment("Enable optimized chunk loading and retention.")
@@ -70,6 +93,54 @@ public class NovaAPIConfig {
             return MODPACK_RESOURCE_PROFILE.get();
         } catch (IllegalStateException ex) {
             return MODPACK_RESOURCE_PROFILE.getDefault();
+        }
+    }
+
+    public static boolean isNovaApiEnabled() {
+        try {
+            return ENABLE_NOVA_API.get();
+        } catch (IllegalStateException ex) {
+            return ENABLE_NOVA_API.getDefault();
+        }
+    }
+
+    public static boolean isAsyncSystemEnabled() {
+        try {
+            return isNovaApiEnabled() && ENABLE_ASYNC_TASKS.get();
+        } catch (IllegalStateException ex) {
+            return isNovaApiEnabled() && ENABLE_ASYNC_TASKS.getDefault();
+        }
+    }
+
+    public static boolean isChunkStreamingEnabled() {
+        try {
+            return isNovaApiEnabled() && ENABLE_CHUNK_STREAMING.get();
+        } catch (IllegalStateException ex) {
+            return isNovaApiEnabled() && ENABLE_CHUNK_STREAMING.getDefault();
+        }
+    }
+
+    public static boolean isModDataCacheEnabled() {
+        try {
+            return isNovaApiEnabled() && ENABLE_MOD_DATA_CACHE.get();
+        } catch (IllegalStateException ex) {
+            return isNovaApiEnabled() && ENABLE_MOD_DATA_CACHE.getDefault();
+        }
+    }
+
+    public static boolean isResourcePackOptimizationsEnabled() {
+        try {
+            return isNovaApiEnabled() && ENABLE_RESOURCEPACK_OPTIMIZATIONS.get();
+        } catch (IllegalStateException ex) {
+            return isNovaApiEnabled() && ENABLE_RESOURCEPACK_OPTIMIZATIONS.getDefault();
+        }
+    }
+
+    public static boolean isRenderEngineOptimizationsEnabled() {
+        try {
+            return isNovaApiEnabled() && ENABLE_RENDER_ENGINE_OPTIMIZATIONS.get();
+        } catch (IllegalStateException ex) {
+            return isNovaApiEnabled() && ENABLE_RENDER_ENGINE_OPTIMIZATIONS.getDefault();
         }
     }
 

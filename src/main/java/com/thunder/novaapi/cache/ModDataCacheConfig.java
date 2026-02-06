@@ -35,7 +35,7 @@ public final class ModDataCacheConfig {
      * Returns whether the cache is enabled.
      */
     public static boolean isCacheEnabled() {
-        return enableCache.get();
+        return NovaAPIConfig.isModDataCacheEnabled() && enableCache.get();
     }
 
     /**

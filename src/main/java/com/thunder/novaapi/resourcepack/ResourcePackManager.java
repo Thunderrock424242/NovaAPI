@@ -44,7 +44,7 @@ import static com.thunder.novaapi.Core.NovaAPI.MOD_ID;
 /**
  * Loads cached external resource packs and registers them with the pack repository.
  */
-@EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = MOD_ID)
 public final class ResourcePackManager {
     private static final Gson GSON = new Gson();
     private static final Path MANIFEST_PATH = FMLPaths.GAMEDIR.get()

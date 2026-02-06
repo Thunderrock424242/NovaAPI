@@ -1,6 +1,7 @@
 package com.thunder.novaapi.RenderEngine;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
+import com.thunder.novaapi.config.NovaAPIConfig;
 
 public final class RenderEngineConfig {
     public static final ModConfigSpec CONFIG_SPEC;
@@ -48,11 +49,11 @@ public final class RenderEngineConfig {
     }
 
     public static boolean isOverlayBatchingEnabled() {
-        return ENABLE_OVERLAY_BATCHING.get();
+        return NovaAPIConfig.isRenderEngineOptimizationsEnabled() && ENABLE_OVERLAY_BATCHING.get();
     }
 
     public static boolean isParticleCullingEnabled() {
-        return ENABLE_PARTICLE_CULLING.get();
+        return NovaAPIConfig.isRenderEngineOptimizationsEnabled() && ENABLE_PARTICLE_CULLING.get();
     }
 
     public static int getParticleCullingDistance() {
@@ -60,7 +61,7 @@ public final class RenderEngineConfig {
     }
 
     public static boolean isInstancedRenderingEnabled() {
-        return ENABLE_INSTANCED_RENDERING.get();
+        return NovaAPIConfig.isRenderEngineOptimizationsEnabled() && ENABLE_INSTANCED_RENDERING.get();
     }
 
     public static double getInstancedLod0Distance() {

@@ -114,8 +114,14 @@ public class NovaAPI {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+            if (!NovaAPIConfig.isNovaApiEnabled()) {
+                LOGGER.info("[NovaAPI] Global disable flag is set. Skipping feature initialization.");
+                return;
+            }
             System.out.println("Nova API setup complete!");
-            ModDataCache.initialize();
+            if (NovaAPIConfig.isModDataCacheEnabled()) {
+                ModDataCache.initialize();
+            }
         });
         dynamicModCount = ModList.get().getMods().size();
     }
@@ -125,6 +131,10 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            LOGGER.info("[NovaAPI] Global disable flag is set. Skipping server startup hooks.");
+            return;
+        }
         MinecraftServer server = event.getServer();
         initializeAsyncAndChunkSystems(server);
         ThreadMonitor.startMonitoring();
@@ -138,6 +148,10 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            LOGGER.info("[NovaAPI] Global disable flag is set. Skipping command registration.");
+            return;
+        }
         if (!NovaAPIConfig.isDebugCommandsEnabled()) {
             LOGGER.info("[NovaAPI] Debug commands disabled by config.");
             return;
@@ -153,6 +167,12 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            return;
+        }
+        if (!NovaAPIConfig.isChunkStreamingEnabled()) {
+            return;
+        }
         if (event.getEntity() instanceof ServerPlayer player) {
             ChunkDeltaTracker.dropPlayer(player);
         }
@@ -160,6 +180,9 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onServerTick(ServerTickEvent.Post event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            return;
+        }
         // Every server tick event
         // This is equivalent to the old "END" phase.
         MinecraftServer server = event.getServer();
@@ -169,13 +192,15 @@ public class NovaAPI {
             worstTickTimeNanos = Math.max(worstTickTimeNanos, duration);
         }
         lastTickTimeNanos = now;
-        if (NovaAPIConfig.isChunkOptimizationsEnabled()) {
+        if (NovaAPIConfig.isChunkStreamingEnabled() && NovaAPIConfig.isChunkOptimizationsEnabled()) {
             for (ServerLevel level : server.getAllLevels()) {
                 ChunkTickThrottler.tick(level);
             }
         }
-        AsyncTaskManager.drainMainThreadQueue(server);
-        if (server.overworld() != null) {
+        if (NovaAPIConfig.isAsyncSystemEnabled()) {
+            AsyncTaskManager.drainMainThreadQueue(server);
+        }
+        if (NovaAPIConfig.isChunkStreamingEnabled() && server.overworld() != null) {
             ChunkStreamManager.tick(server.overworld().getGameTime());
         }
         if (NovaAPIConfig.isAutomaticPerformanceMitigationsEnabled()) {
@@ -209,6 +234,12 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onWorldSave(LevelEvent.Save event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            return;
+        }
+        if (!NovaAPIConfig.isChunkStreamingEnabled()) {
+            return;
+        }
         if (event.getLevel() instanceof ServerLevel serverLevel) {
             ChunkStreamManager.flushAll(serverLevel.getGameTime());
         }
@@ -216,18 +247,37 @@ public class NovaAPI {
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        long gameTime = event.getServer().overworld() != null ? event.getServer().overworld().getGameTime() : 0L;
-        ChunkStreamManager.flushAll(gameTime);
-        AsyncTaskManager.shutdown();
-        ChunkStreamManager.shutdown();
-        IoExecutors.shutdown();
-        ChunkDeltaTracker.shutdown();
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (NovaAPIConfig.isChunkStreamingEnabled()) {
+            long gameTime = event.getServer().overworld() != null ? event.getServer().overworld().getGameTime() : 0L;
+            ChunkStreamManager.flushAll(gameTime);
+        }
+        if (NovaAPIConfig.isAsyncSystemEnabled()) {
+            AsyncTaskManager.shutdown();
+        }
+        if (NovaAPIConfig.isChunkStreamingEnabled()) {
+            ChunkStreamManager.shutdown();
+            IoExecutors.shutdown();
+            ChunkDeltaTracker.shutdown();
+        }
         shutdown();
         REGION_CACHE.clear();
         BackgroundTaskScheduler.shutdown();
     }
 
     private void restartAsyncSystems() {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (!NovaAPIConfig.isAsyncSystemEnabled()) {
+            AsyncTaskManager.shutdown();
+            asyncInitialized = false;
+            return;
+        }
         if (asyncInitialized) {
             AsyncTaskManager.shutdown();
         }
@@ -236,6 +286,18 @@ public class NovaAPI {
     }
 
     private void restartChunkStreaming() {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (!NovaAPIConfig.isChunkStreamingEnabled()) {
+            ChunkStreamManager.shutdown();
+            IoExecutors.shutdown();
+            ChunkDeltaTracker.shutdown();
+            chunkStreamingInitialized = false;
+            chunkStorageRoot = null;
+            return;
+        }
         if (!chunkStreamingInitialized || chunkStorageRoot == null) {
             return;
         }
@@ -250,15 +312,32 @@ public class NovaAPI {
     }
 
     private void initializeAsyncAndChunkSystems(MinecraftServer server) {
-        AsyncTaskManager.initialize(resolveAsyncConfig());
-        asyncInitialized = true;
-        ChunkStreamingConfig.ChunkConfigValues chunkConfig = resolveChunkConfig();
-        BufferPool.configure(chunkConfig);
-        IoExecutors.initialize(chunkConfig);
-        chunkStorageRoot = ChunkStoragePaths.resolveCacheRoot(server, chunkConfig);
-        ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
-        ChunkDeltaTracker.configure(chunkConfig);
-        chunkStreamingInitialized = true;
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (NovaAPIConfig.isAsyncSystemEnabled()) {
+            AsyncTaskManager.initialize(resolveAsyncConfig());
+            asyncInitialized = true;
+        } else {
+            AsyncTaskManager.shutdown();
+            asyncInitialized = false;
+        }
+        if (NovaAPIConfig.isChunkStreamingEnabled()) {
+            ChunkStreamingConfig.ChunkConfigValues chunkConfig = resolveChunkConfig();
+            BufferPool.configure(chunkConfig);
+            IoExecutors.initialize(chunkConfig);
+            chunkStorageRoot = ChunkStoragePaths.resolveCacheRoot(server, chunkConfig);
+            ChunkStreamManager.initialize(chunkConfig, new DiskChunkStorageAdapter(chunkStorageRoot, chunkConfig.compressionLevel(), chunkConfig.compressionCodec()));
+            ChunkDeltaTracker.configure(chunkConfig);
+            chunkStreamingInitialized = true;
+        } else {
+            ChunkStreamManager.shutdown();
+            IoExecutors.shutdown();
+            ChunkDeltaTracker.shutdown();
+            chunkStorageRoot = null;
+            chunkStreamingInitialized = false;
+        }
     }
 
     private static AsyncThreadingConfig.AsyncConfigValues resolveAsyncConfig() {
@@ -407,8 +486,22 @@ public class NovaAPI {
     }
 
     public void onConfigLoaded(ModConfigEvent.Loading event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (event.getConfig().getSpec() == NovaAPIConfig.CONFIG) {
+            if (NovaAPIConfig.isModDataCacheEnabled()) {
+                ModDataCache.initialize();
+            }
+            restartAsyncSystems();
+            restartChunkStreaming();
+            return;
+        }
         if (event.getConfig().getSpec() == ModDataCacheConfig.CONFIG_SPEC) {
-            ModDataCache.initialize();
+            if (NovaAPIConfig.isModDataCacheEnabled()) {
+                ModDataCache.initialize();
+            }
         }
         if (event.getConfig().getSpec() == AsyncThreadingConfig.CONFIG_SPEC) {
             restartAsyncSystems();
@@ -419,8 +512,22 @@ public class NovaAPI {
     }
 
     public void onConfigReloaded(ModConfigEvent.Reloading event) {
+        if (!NovaAPIConfig.isNovaApiEnabled()) {
+            disableAllSystems();
+            return;
+        }
+        if (event.getConfig().getSpec() == NovaAPIConfig.CONFIG) {
+            if (NovaAPIConfig.isModDataCacheEnabled()) {
+                ModDataCache.initialize();
+            }
+            restartAsyncSystems();
+            restartChunkStreaming();
+            return;
+        }
         if (event.getConfig().getSpec() == ModDataCacheConfig.CONFIG_SPEC) {
-            ModDataCache.initialize();
+            if (NovaAPIConfig.isModDataCacheEnabled()) {
+                ModDataCache.initialize();
+            }
         }
         if (event.getConfig().getSpec() == AsyncThreadingConfig.CONFIG_SPEC) {
             restartAsyncSystems();
@@ -442,5 +549,17 @@ public class NovaAPI {
 
     public static void shutdown() {
         ThreadMonitor.stopMonitoring();
+    }
+
+    private void disableAllSystems() {
+        AsyncTaskManager.shutdown();
+        ChunkStreamManager.shutdown();
+        IoExecutors.shutdown();
+        ChunkDeltaTracker.shutdown();
+        ThreadMonitor.stopMonitoring();
+        REGION_CACHE.clear();
+        BackgroundTaskScheduler.shutdown();
+        asyncInitialized = false;
+        chunkStreamingInitialized = false;
     }
 }

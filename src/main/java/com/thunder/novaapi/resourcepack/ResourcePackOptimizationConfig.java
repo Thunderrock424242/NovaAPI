@@ -1,6 +1,7 @@
 package com.thunder.novaapi.resourcepack;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
+import com.thunder.novaapi.config.NovaAPIConfig;
 
 /**
  * Configuration toggles for optimizing resource pack caching and activation.
@@ -41,7 +42,7 @@ public final class ResourcePackOptimizationConfig {
     }
 
     public static boolean isOptimizationEnabled() {
-        return enableOptimization.get();
+        return NovaAPIConfig.isResourcePackOptimizationsEnabled() && enableOptimization.get();
     }
 
     public static boolean isRemoteDownloadAllowed() {

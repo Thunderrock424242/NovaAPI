@@ -163,52 +163,55 @@ public final class ModDataCache {
         Objects.requireNonNull(supplier, "supplier");
         initialize();
 
-        Path tempFile = Files.createTempFile("modcache-", ".tmp");
-        String computedChecksum;
-        long size;
-        try (InputStream raw = supplier.openStream()) {
-            if (raw == null) {
-                Files.deleteIfExists(tempFile);
-                throw new IOException("Resource supplier returned null for key " + key);
-            }
-            try (DigestInputStream digestStream = new DigestInputStream(raw, newDigest());
-             OutputStream out = Files.newOutputStream(tempFile)) {
-                size = digestStream.transferTo(out);
-                computedChecksum = bytesToHex(digestStream.getMessageDigest().digest());
-            }
-        }
-
-        if (expectedChecksum != null && !expectedChecksum.isEmpty() && !expectedChecksum.equalsIgnoreCase(computedChecksum)) {
-            Files.deleteIfExists(tempFile);
-            throw new IOException("Checksum mismatch for key " + key + ": expected " + expectedChecksum + " but found " + computedChecksum);
-        }
-
-        if (!cacheEnabled) {
-            // When caching is disabled we simply place the file inside the cache directory without indexing.
-            Path target = cacheDirectory.resolve(safeFileName(key, computedChecksum));
-            Files.createDirectories(target.getParent());
-            Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
-            return target;
-        }
-
-        LOCK.writeLock().lock();
+        Files.createDirectories(cacheDirectory);
+        Path tempFile = Files.createTempFile(cacheDirectory, "modcache-", ".tmp");
         try {
-            CacheEntry existing = ENTRIES.get(key);
-            if (existing != null) {
-                removeEntry(key, existing);
+            String computedChecksum;
+            long size;
+            try (InputStream raw = supplier.openStream()) {
+                if (raw == null) {
+                    throw new IOException("Resource supplier returned null for key " + key);
+                }
+                try (DigestInputStream digestStream = new DigestInputStream(raw, newDigest());
+                     OutputStream out = Files.newOutputStream(tempFile)) {
+                    size = digestStream.transferTo(out);
+                    computedChecksum = bytesToHex(digestStream.getMessageDigest().digest());
+                }
             }
-            Path target = cacheDirectory.resolve(safeFileName(key, computedChecksum));
-            Files.createDirectories(target.getParent());
-            Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
-            CacheEntry entry = new CacheEntry(target.getFileName().toString(), computedChecksum, size,
-                    Instant.now().toEpochMilli(), Instant.now().toEpochMilli());
-            ENTRIES.put(key, entry);
-            persistIndexAsync();
-            enforceSizeLimit();
-            pruneExpiredEntries();
-            return target;
+
+            if (expectedChecksum != null && !expectedChecksum.isEmpty() && !expectedChecksum.equalsIgnoreCase(computedChecksum)) {
+                throw new IOException("Checksum mismatch for key " + key + ": expected " + expectedChecksum + " but found " + computedChecksum);
+            }
+
+            if (!cacheEnabled) {
+                // When caching is disabled we simply place the file inside the cache directory without indexing.
+                Path target = cacheDirectory.resolve(safeFileName(key, computedChecksum));
+                Files.createDirectories(target.getParent());
+                Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
+                return target;
+            }
+
+            LOCK.writeLock().lock();
+            try {
+                CacheEntry existing = ENTRIES.get(key);
+                if (existing != null) {
+                    removeEntry(key, existing, false);
+                }
+                Path target = cacheDirectory.resolve(safeFileName(key, computedChecksum));
+                Files.createDirectories(target.getParent());
+                Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
+                CacheEntry entry = new CacheEntry(target.getFileName().toString(), computedChecksum, size,
+                        Instant.now().toEpochMilli(), Instant.now().toEpochMilli());
+                ENTRIES.put(key, entry);
+                enforceSizeLimit();
+                pruneExpiredEntries();
+                persistIndexAsync();
+                return target;
+            } finally {
+                LOCK.writeLock().unlock();
+            }
         } finally {
-            LOCK.writeLock().unlock();
+            Files.deleteIfExists(tempFile);
         }
     }
 
@@ -303,9 +306,15 @@ public final class ModDataCache {
     }
 
     private static void removeEntry(String key, CacheEntry entry) {
+        removeEntry(key, entry, true);
+    }
+
+    private static void removeEntry(String key, CacheEntry entry, boolean persist) {
         ENTRIES.remove(key);
         deleteFileQuietly(cacheDirectory.resolve(entry.fileName()));
-        persistIndexAsync();
+        if (persist) {
+            persistIndexAsync();
+        }
     }
 
     private static void pruneExpiredEntries() {
@@ -316,14 +325,18 @@ public final class ModDataCache {
         long cutoff = Instant.now().minus(maxAge).toEpochMilli();
         LOCK.writeLock().lock();
         try {
+            boolean[] changed = {false};
             ENTRIES.entrySet().removeIf(e -> {
                 boolean expired = e.getValue().lastAccess() < cutoff;
                 if (expired) {
+                    changed[0] = true;
                     deleteFileQuietly(cacheDirectory.resolve(e.getValue().fileName()));
                 }
                 return expired;
             });
-            persistIndexAsync();
+            if (changed[0]) {
+                persistIndexAsync();
+            }
         } finally {
             LOCK.writeLock().unlock();
         }
@@ -342,12 +355,17 @@ public final class ModDataCache {
             }
             ArrayList<Map.Entry<String, CacheEntry>> entries = new ArrayList<>(ENTRIES.entrySet());
             entries.sort(Comparator.comparingLong(e -> e.getValue().lastAccess()));
+            boolean changed = false;
             for (Map.Entry<String, CacheEntry> entry : entries) {
                 if (totalSize <= limit) {
                     break;
                 }
-                removeEntry(entry.getKey(), entry.getValue());
+                removeEntry(entry.getKey(), entry.getValue(), false);
                 totalSize -= entry.getValue().size();
+                changed = true;
+            }
+            if (changed) {
+                persistIndexAsync();
             }
         } finally {
             LOCK.writeLock().unlock();

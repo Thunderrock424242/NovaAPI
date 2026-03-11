@@ -28,7 +28,7 @@ public final class ConfigRegistrationValidator {
      * @param spec      the config specification to register
      * @param fileName  the target config filename
      */
-    public static void register(ModContainer container, ModConfig.Type type, ModConfigSpec spec, String fileName) {
+    public static synchronized void register(ModContainer container, ModConfig.Type type, ModConfigSpec spec, String fileName) {
         Objects.requireNonNull(container, "ModContainer cannot be null");
         Objects.requireNonNull(type, "ModConfig.Type cannot be null");
         Objects.requireNonNull(spec, "ModConfigSpec cannot be null");

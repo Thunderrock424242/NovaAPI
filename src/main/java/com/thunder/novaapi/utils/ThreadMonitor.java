@@ -6,7 +6,6 @@ import com.thunder.novaapi.config.NovaAPIConfig;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.Map;
 
 public class ThreadMonitor {
 
@@ -51,12 +50,15 @@ public class ThreadMonitor {
         if (!NovaAPIConfig.isMemoryThreadLogsEnabled()) {
             return;
         }
-        Map<Thread, StackTraceElement[]> threads = Thread.getAllStackTraces();
-        NovaAPI.LOGGER.debug("📌 Active Threads: {}", threads.size());
+        ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+        int threadCount = threadBean.getThreadCount();
+        NovaAPI.LOGGER.debug("📌 Active Threads: {}", threadCount);
 
-        for (Thread thread : threads.keySet()) {
-            NovaAPI.LOGGER.trace("🧵 Thread Name: {} | ID: {} | State: {} | Priority: {}",
-                    thread.getName(), thread.threadId(), thread.getState(), thread.getPriority());
+        if (NovaAPI.LOGGER.isTraceEnabled()) {
+            for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                NovaAPI.LOGGER.trace("🧵 Thread Name: {} | ID: {} | State: {} | Priority: {}",
+                        thread.getName(), thread.threadId(), thread.getState(), thread.getPriority());
+            }
         }
     }
 

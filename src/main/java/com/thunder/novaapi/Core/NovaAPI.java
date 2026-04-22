@@ -137,7 +137,9 @@ public class NovaAPI {
         }
         MinecraftServer server = event.getServer();
         initializeAsyncAndChunkSystems(server);
-        ThreadMonitor.startMonitoring();
+        if (NovaAPIConfig.isMemoryThreadLogsEnabled()) {
+            ThreadMonitor.startMonitoring();
+        }
     }
 
     @SubscribeEvent

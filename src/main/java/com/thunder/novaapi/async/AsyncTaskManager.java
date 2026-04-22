@@ -231,11 +231,6 @@ public final class AsyncTaskManager {
                         executor.getQueue().size(),
                         callerRuns);
             }
-            try {
-                TimeUnit.MILLISECONDS.sleep(5);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
             task.run();
         };
     }
